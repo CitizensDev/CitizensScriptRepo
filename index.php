@@ -1,5 +1,4 @@
 <?php
-var_dump(crc32('asdfasdf'));
 session_start();
 
 // Get the arguments from the url
