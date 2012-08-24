@@ -1,53 +1,57 @@
 <?php
 var_dump(crc32('asdfasdf'));
 session_start();
-include('classes/main.class.php');
-#if($_GET['d']!=8327962){ header('Location: http://computercraft.org/'); exit; }
 
+// Get the arguments from the url
 $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
 $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
 
+// This is just on git.
 include('password.php');
 $connectionHandle = new mysqli('localhost', 'ComputerCraft', $password, 'ComputerCraft');
+include('assets/bcrypt.php');
+function isValidLogin($user, $password){
+    $bCrypt = new Bcrypt(24);
+    $username = htmlspecialchars($user);
+    $result = $connectionHandle->query("SELECT * FROM repo_users WHERE name='$username'");
+    $row = $result->fetch_assoc();
+    return $bCrypt->verify($password, $row['pass']);
+}
 
 switch(strtolower($args[0])){
     case 'login':
-        $output = "You are now logging in!";
         break;
     case 'logout':
-        $output = "You are now logging out!";
         break;
     case 'register':
-        $output = "You are now registering!";
         break;
     case 'post':
-        $output = "You are now posting!";
         break;
     case 'edit':
-        $output = "You are now editing!";
         break;
     case 'search':
-        $output = "You are now searching!";
         break;
     case 'list':
-        $output = "You are now listing!";
         break;
     case 'view':
-        $connectionHandle = new mysqli();
-        $data = 
-        $output = "You are now viewing!";
+        $pubID = strtolower($args[1]);
+        $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
+        if($query->num_rows===0){ $output='assets/pages/404view.php'; }else{
+            // $dataToUse gets taken by view.php and turned into the main page.
+            $dataToUse = $query->fetch_assoc();
+            $output = 'assets/pages/view.php';
+        }
         break;
     case 'user':
-        $output = "You are now usering! :~)";
         break;
     case 'admin':
-        $output = "You are now admining!";
+        $output = 'assets/pages/admin.php';
         break;
     case '':
-        $output = "Index!";
+        $output = 'assets/pages/index.php';
         break;
     default:
-        $output = "Could not find a page by that name!";
+        $output = 'assets/pages/404.php';
         break;
 }
 
@@ -115,7 +119,7 @@ if($page=='raw'){
         <div class="container">
             
             
-            <?php echo $output; ?>
+            <?php include($output); ?>
             
             
             <footer class="footer">
