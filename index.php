@@ -1,11 +1,18 @@
 <?php
+if($_SERVER['REMOTE_ADDR']!="173.71.155.21"){
+    header('Location: http://computercraft.info/');
+    exit;
+}
 session_start();
 
 // Get the arguments from the url
 $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
 $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
 
-// 
+// Recaptcha
+require_once('assets/recaptchalib.php');
+
+function alphaID($in, $to_num = false, $pad_up = false){
 /**
  * Translates a number to a short alhanumeric version
  * 
@@ -21,7 +28,6 @@ $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
  * 
  * @return mixed string or long
  */
-function alphaID($in, $to_num = false, $pad_up = false){
     $index = "abcdefghijklmnopqrstuvwxyz0123456789";
     $base  = strlen($index);
  
@@ -61,6 +67,73 @@ function alphaID($in, $to_num = false, $pad_up = false){
  
     return $out;
 }
+function validEmail($email){
+    /*
+     * Email validation function. Credit to http://www.linuxjournal.com/article/9585.
+     */
+   $isValid = true;
+   $atIndex = strrpos($email, "@");
+   if (is_bool($atIndex) && !$atIndex)
+   {
+      $isValid = false;
+   }
+   else
+   {
+      $domain = substr($email, $atIndex+1);
+      $local = substr($email, 0, $atIndex);
+      $localLen = strlen($local);
+      $domainLen = strlen($domain);
+      if ($localLen < 1 || $localLen > 64)
+      {
+         // local part length exceeded
+         $isValid = false;
+      }
+      else if ($domainLen < 1 || $domainLen > 255)
+      {
+         // domain part length exceeded
+         $isValid = false;
+      }
+      else if ($local[0] == '.' || $local[$localLen-1] == '.')
+      {
+         // local part starts or ends with '.'
+         $isValid = false;
+      }
+      else if (preg_match('/\\.\\./', $local))
+      {
+         // local part has two consecutive dots
+         $isValid = false;
+      }
+      else if (!preg_match('/^[A-Za-z0-9\\-\\.]+$/', $domain))
+      {
+         // character not valid in domain part
+         $isValid = false;
+      }
+      else if (preg_match('/\\.\\./', $domain))
+      {
+         // domain part has two consecutive dots
+         $isValid = false;
+      }
+      else if
+(!preg_match('/^(\\\\.|[A-Za-z0-9!#%&`_=\\/$\'*+?^{}|~.-])+$/',
+                 str_replace("\\\\","",$local)))
+      {
+         // character not valid in local part unless 
+         // local part is quoted
+         if (!preg_match('/^"(\\\\"|[^"])+"$/',
+             str_replace("\\\\","",$local)))
+         {
+            $isValid = false;
+         }
+      }
+      if ($isValid && !(checkdnsrr($domain,"MX") || 
+ ↪checkdnsrr($domain,"A")))
+      {
+         // domain not found in DNS
+         $isValid = false;
+      }
+   }
+   return $isValid;
+}
 
 // Smarty
 include('assets/Smarty/Smarty.class.php');
@@ -83,13 +156,52 @@ function isValidLogin($user, $password){
     return $bCrypt->verify($password, $row['pass']);
 }
 
-
 switch(strtolower($args[0])){
     case 'login':
         break;
     case 'logout':
         break;
     case 'register':
+        $smarty->assign('recaptcha', recaptcha_get_html($publicKey, 'Bad reCAPTCHA!'));
+        if(isset($_POST['register'])){
+            $captcha = recaptcha_check_answer($privateKey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
+            // Checks
+            if(strlen($_POST['password'])<5){
+                // Make sure the password is 5 characters long
+                $smarty->assign('registerError', 'Password must be more than 5 characters!');
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('passwordError', true);
+                $output = 'register.tpl';
+            }elseif($_POST['password']!==$_POST['passwordConfirm']){
+                // Make sure the passwords match
+                $smarty->assign('registerError', 'Passwords do not match!');
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('passwordError', true);
+                $output = 'register.tpl';
+            }elseif(!validEmail($_POST['email'])){
+                // Make sure the email address is a valid email address
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('emailError', true);
+                $smarty->assign('registerError', 'Invalid email address!');
+                $output = 'register.tpl';
+            }elseif(false){
+                // Make sure the username isn't taken
+            }elseif(false){
+                // Make sure the email address isn't being used
+            }elseif(!$captcha->is_valid){
+                // Make sure the reCaptcha was correct
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('captchaError', true);
+                $smarty->assign('registerError', "The reCAPTCHA wasn't entered correctly. Go back and try it again. ($captcha->error)");
+                $output = 'register.tpl';
+            }
+        }else{
+            $output = 'register.tpl';
+        }
         break;
     case 'post':
         break;
