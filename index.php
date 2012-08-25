@@ -158,6 +158,14 @@ function isValidLogin($user, $password){
 
 switch(strtolower($args[0])){
     case 'login':
+        if(isset($_POST['login'])){
+            // Checks
+            if(false){
+                
+            }
+        }else{
+            $output = 'login.tpl';
+        }
         break;
     case 'logout':
         break;
@@ -165,6 +173,10 @@ switch(strtolower($args[0])){
         $smarty->assign('recaptcha', recaptcha_get_html($publicKey, 'Bad reCAPTCHA!'));
         if(isset($_POST['register'])){
             $captcha = recaptcha_check_answer($privateKey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
+            $email = htmlentities($_POST['email']);
+            $emailQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE email='$email'");
+            $user = htmlentities($_POST['username']);
+            $userQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE user='$user'");
             // Checks
             if(strlen($_POST['password'])<5){
                 // Make sure the password is 5 characters long
@@ -180,6 +192,12 @@ switch(strtolower($args[0])){
                 $smarty->assign('email', $_POST['email']);
                 $smarty->assign('passwordError', true);
                 $output = 'register.tpl';
+            }elseif(strlen($_POST['username'])<3){
+                $smarty->assign('registerError', 'Username must be at least 3 characters!');
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('usernameError', true);
+                $output = 'register.tpl';
             }elseif(!validEmail($_POST['email'])){
                 // Make sure the email address is a valid email address
                 $smarty->assign('username', $_POST['username']);
@@ -187,10 +205,20 @@ switch(strtolower($args[0])){
                 $smarty->assign('emailError', true);
                 $smarty->assign('registerError', 'Invalid email address!');
                 $output = 'register.tpl';
-            }elseif(false){
-                // Make sure the username isn't taken
-            }elseif(false){
+            }elseif($emailQuery->num_rows===0){
                 // Make sure the email address isn't being used
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('emailError', true);
+                $smarty->assign('registerError', 'Email already in use!');
+                $output = 'register.tpl';
+            }elseif($userQuery->num_rows===0){
+                // Make sure the username isn't taken
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('userError', true);
+                $smarty->assign('registerError', 'Username already in use!');
+                $output = 'register.tpl';
             }elseif(!$captcha->is_valid){
                 // Make sure the reCaptcha was correct
                 $smarty->assign('username', $_POST['username']);
@@ -198,6 +226,10 @@ switch(strtolower($args[0])){
                 $smarty->assign('captchaError', true);
                 $smarty->assign('registerError', "The reCAPTCHA wasn't entered correctly. Go back and try it again. ($captcha->error)");
                 $output = 'register.tpl';
+            }else{
+                //
+                $smarty->assign('loginError', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
+                $output = 'login.tpl';
             }
         }else{
             $output = 'register.tpl';
