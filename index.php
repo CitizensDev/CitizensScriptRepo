@@ -21,8 +21,7 @@ $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
  * 
  * @return mixed string or long
  */
-function alphaID($in, $to_num = false, $pad_up = false)
-{
+function alphaID($in, $to_num = false, $pad_up = false){
     $index = "abcdefghijklmnopqrstuvwxyz0123456789";
     $base  = strlen($index);
  
@@ -103,10 +102,10 @@ switch(strtolower($args[0])){
     case 'view':
         $pubID = addslashes(strtolower($args[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-        if($query->num_rows===0){ $output='assets/pages/404view.php'; }else{
+        if($query->num_rows==0){ $output='unknownPage.tpl'; }else{
             // $dataToUse gets taken by view.php and turned into the main page.
-            $dataToUse = $query->fetch_assoc();
-            $output = 'assets/pages/view.php';
+            $smarty->assign('dataToUse', $query->fetch_assoc());
+            $output = 'view.tpl';
         }
         break;
     case 'user':
@@ -114,8 +113,10 @@ switch(strtolower($args[0])){
     case 'admin':
         break;
     case '':
+        $output = 'home.tpl';
         break;
     default:
+        $output = '404.tpl';
         break;
 }
 

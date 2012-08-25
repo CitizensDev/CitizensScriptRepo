@@ -22,7 +22,7 @@
             </div>
         </section>
         <div class="container">
-            {* {include file="$output"} *}
+            {include file="$output"}
 
 
 
