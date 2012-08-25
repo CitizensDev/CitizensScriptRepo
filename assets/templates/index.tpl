@@ -11,7 +11,7 @@
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
                         </a>
-                        <a class="brand" href="#">ComputerCraft Program Repo</a>
+                        <a class="brand" href="http://repo.computercraft.org/">ComputerCraft Program Repo</a>
                             <ul class="nav pull-right">
                                 <li>
                                     {if $loginStatus == 1}<a href="http://repo.computercraft.org/logout">Logout</a>{else}<a href="http://repo.computercraft.org/login">Login/Register</a>{/if}
