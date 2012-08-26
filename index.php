@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+
 // Get the arguments from the url
 $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
 $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
@@ -168,8 +169,12 @@ switch(strtolower($args[0])){
                 $smarty->assign('passwordError', true);
                 $output = 'login.tpl';
             }else{
-                
+                // Login
             }
+        }elseif($_SESSION['isLoggedIn']){
+            // Are they already logged in?
+            header('Location: http://repo.computercraft.org/user/'.$_SESSION['username'].'/');
+            exit;
         }else{
             $output = 'login.tpl';
         }
@@ -234,7 +239,16 @@ switch(strtolower($args[0])){
                 $smarty->assign('registerError', "The reCAPTCHA wasn't entered correctly. Go back and try it again. ($captcha->error)");
                 $output = 'register.tpl';
             }else{
-                //
+                // Register
+                $connectionHandle->query("INSERT INTO repo_users('id', 'username', 'email', 'password', 'confirmed', 'staff') VALUES ('NULL', '$user', '$email', false, false)");
+                // Send them their confirmation email, too.
+                $confirmationCode = md5($user);
+                mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
+                        Before you can begin using the site, you must first confirm your account by clicking this link:
+                        http://repo.computercraft.org/verify/$user/$confirmationCode/
+                        
+                        Thanks,
+                        ~Administration");
                 $smarty->assign('registerFinished', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
                 $output = 'login.tpl';
             }
@@ -243,6 +257,20 @@ switch(strtolower($args[0])){
         }
         break;
     case 'post':
+        break;
+    case 'verify':
+        $user = htmlspecialchars($args[2]);
+        $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND confirmed=false");
+        if(!isset($args[2]) || !isset($args[3]) || $args[2]!=md5($args[3]) || $query->num_rows===0){
+            // Something's wrong.
+            header('Location: http://repo.computercraft.org/');
+            exit;
+        }else{
+            // Verify user
+            $connectionHandle->query("UPDATE repo_users SET 'confirmed'=true WHERE 'username'='$user'");
+            $smarty->assign('registerFinished', 'You have successfully confirmed your email. You may now log in.');
+            $output = 'login.tpl';
+        }
         break;
     case 'edit':
         break;
