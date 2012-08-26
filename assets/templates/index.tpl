@@ -2,24 +2,59 @@
     <body class="preview" data-spy="scroll" data-target=".subnav" data-offset="50">
         <section id="navbar">
             <div class="navbar">
-                <div class="navbar-inner">
-                    
-                    
-                    <div class="container" style="width:1170px;margin: 0px auto;">
-                        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </a>
-                        <a class="brand" href="http://repo.computercraft.org/">Denizen Script Repo</a>
-                            <ul class="nav pull-right">
-                                <li>
-                                    {if $loginStatus == 1}<a href="http://repo.computercraft.org/logout">Logout</a>{else}<a href="http://repo.computercraft.org/login">Login/Register</a>{/if}
-                                </li>
-                            </ul>
-                    </div>
+              <div class="navbar-inner">
+                <div class="container">
+                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </a>
+                  <a class="brand" href="http://repo.computercraft.org/">Denizen Script Repo</a>
+                  <div class="nav-collapse">
+                    <ul class="nav">
+                      <li{if $activePage=="home"} class="active"{/if}><a href="http://repo.computercraft.org/">Home</a></li>
+                      <li{if $activePage=="link1"} class="active"{/if}><a href="http://repo.computercraft.org/list">List</a></li>
+                      <li{if $activePage=="link2"} class="active"{/if}><a href="http://repo.computercraft.org/post">Post</a></li>
+                      <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="#">Action</a></li>
+                          <li><a href="#">Another action</a></li>
+                          <li><a href="#">Something else here</a></li>
+                          <li class="divider"></li>
+                          <li class="nav-header">Nav header</li>
+                          <li><a href="#">Separated link</a></li>
+                          <li><a href="#">One more separated link</a></li>
+                        </ul>
+                      </li>
+                    </ul>
+                    <form class="navbar-search pull-left" action="">
+                      <input type="text" class="search-query" placeholder="Search">
+                    </form>
+                    <ul class="nav pull-right">
+                      {if $loggedIn}
+                      <li class="dropdown">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown">{$username} <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                          <li><a href="http://repo.computercraft.org/user/{$username}/">Your Profile</a></li>
+                          <li><a href="http://repo.computercraft.org/settings">Settings</a></li>
+                          <li><a href="#">Something else here</a></li>
+                          <li class="divider"></li>
+                          <li><a href="http://repo.computercraft.org/logout">Logout</a></li>
+                        </ul>
+                      </li>
+                      {else}
+                      <li>
+                        <ul class="nav">
+                          <li><a href="http://repo.computercraft.org/login">Login/Register</a></li>
+                        </ul>
+                      </li>
+                      {/if}
+                    </ul>
+                  </div><!-- /.nav-collapse -->
                 </div>
-            </div>
+              </div><!-- /navbar-inner -->
+            </div><!-- /navbar -->
         </section>
         <div class="container">
             {include file="$output"}

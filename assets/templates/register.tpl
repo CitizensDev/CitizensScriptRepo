@@ -3,8 +3,8 @@
         <legend>Register</legend>
         <p>An account is required for most of the actions on the site. Your email address is required both to allow for password recovery and prevent spam.</p>
         <br />
-        {if $registerError }<strong>{$registerError}</strong><br /><br />{/if}
-        
+        <div class="well well-large">
+        {if $registerError }<div class="alert alert-error"><strong>{$registerError}</strong></div><br /><br />{/if}
         <input type='hidden' name='register' id='register' value='1'/>
         {if $usernameError}<div class="control-group error">{/if}<label for='username' >Username:</label>
         <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />{if $usernameError}</div>{/if}
@@ -18,5 +18,6 @@
         {$recaptcha}
         <br /><br /><p><small>All fields are required</small></p>
         <input class="btn btn-primary" type='submit' name='Submit' value='Submit' />
+        </div>
     </fieldset>
 </form>

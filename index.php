@@ -1,8 +1,4 @@
 <?php
-if($_SERVER['REMOTE_ADDR']!="173.71.155.21"){
-    header('Location: http://computercraft.info/');
-    exit;
-}
 session_start();
 
 // Get the arguments from the url
@@ -151,16 +147,27 @@ include('assets/bcrypt.php');
 function isValidLogin($user, $password){
     $bCrypt = new Bcrypt(24);
     $username = htmlspecialchars($user);
-    $result = $connectionHandle->query("SELECT * FROM repo_users WHERE name='$username'");
-    $row = $result->fetch_assoc();
-    return $bCrypt->verify($password, $row['pass']);
+    #$result = $connectionHandle->query("SELECT * FROM repo_users WHERE name='$username'");
+    #$row = $result->fetch_assoc();
+    #return $bCrypt->verify($password, $row['pass']);
+    return false;
 }
 
 switch(strtolower($args[0])){
     case 'login':
         if(isset($_POST['login'])){
             // Checks
-            if(false){
+            if($_POST['username']=="" || $_POST['password']==""){
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('loginError', 'You must enter both a username and password.');
+                $smarty->assign('passwordError', true);
+                $output = 'login.tpl';
+            }elseif(!isValidLogin($_POST['username'], $_POST['password'])){
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('loginError', 'Invalid username or password!');
+                $smarty->assign('passwordError', true);
+                $output = 'login.tpl';
+            }else{
                 
             }
         }else{
@@ -228,7 +235,7 @@ switch(strtolower($args[0])){
                 $output = 'register.tpl';
             }else{
                 //
-                $smarty->assign('loginError', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
+                $smarty->assign('registerFinished', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
                 $output = 'login.tpl';
             }
         }else{
@@ -249,6 +256,7 @@ switch(strtolower($args[0])){
         if($query->num_rows==0){ $output='unknownPage.tpl'; }else{
             // $dataToUse gets taken by view.php and turned into the main page.
             $smarty->assign('dataToUse', $query->fetch_assoc());
+            $smarty->assign('activePage', 'view');
             $output = 'view.tpl';
         }
         break;
@@ -257,6 +265,7 @@ switch(strtolower($args[0])){
     case 'admin':
         break;
     case '':
+        $smarty->assign('activePage', 'home');
         $output = 'home.tpl';
         break;
     default:
