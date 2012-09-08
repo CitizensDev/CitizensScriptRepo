@@ -2,6 +2,7 @@
 ini_set('display_errors', 'On');
 session_start();
 if(!isset($_SESSION['loggedIn'])){ $_SESSION['loggedIn'] = false; }
+if(!isset($_SESSION['admin'])){ $_SESSION['admin'] = false; }
 error_reporting(E_ALL);
 date_default_timezone_set('America/New_York');
 
@@ -143,6 +144,7 @@ $smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c')
 $smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
 $smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
 $smarty->assign('loggedIn', $_SESSION['loggedIn']);
+$smarty->assign('admin', $_SESSION['admin']);
 if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
 
 // This is just on git.
@@ -160,13 +162,14 @@ function isValidLogin($user, $password){
 $bCrypt = new Bcrypt(12);
 switch(strtolower($args[0])){
     case 'login':
+        $smarty->assign('activePage', 'login');
         $smarty->assign('loginError', false);
-        $smarty->assign('registerFinished', false);
+        $smarty->assign('loginMessage', false);
         $smarty->assign('passwordError', false);
         $smarty->assign('userError', false);
-        if(isset($_SESSION['justRegistered'])){
-            unset($_SESSION['justRegistered']);
-            $smarty->assign('registerFinished', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
+        if(isset($_SESSION['loginMessage'])){
+            $smarty->assign('loginMessage', $_SESSION['loginMessage']);
+            unset($_SESSION['loginMessage']);
         }
         if(isset($_POST['login'])){
             // Checks
@@ -185,18 +188,27 @@ switch(strtolower($args[0])){
                 // Login
                 $_SESSION['loggedIn'] = true;
                 $_SESSION['username'] = $_POST['username'];
+                $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='".$_POST['username']."'");
+                if($query!==false){
+                    $row = $query->fetch_assoc();
+                    if($row['staff']==1){ $_SESSION['admin'] = true; }else{ $_SESSION['admin'] = false; } }
                 header('Location: http://scripts.citizensnpcs.com/');
                 exit;
             }
         }elseif($_SESSION['loggedIn']){
             // Are they already logged in?
-            header('Location: http://scripts.citizensnpcs.com/user/'.$_SESSION['username'].'/');
+            header('Location: http://scripts.citizensnpcs.com/user/'.$_SESSION['username']);
             exit;
         }else{
             $output = 'login.tpl';
         }
         break;
     case 'logout':
+        session_destroy();
+        session_start();
+        $_SESSION['loginMessage'] = 'You have been successfully logged out.';
+        header('Location: http://scripts.citizensnpcs.com/login');
+        exit;
         break;
     case 'register':
         $ayah = new AYAH($publisherKey, $scoringKey);
@@ -274,7 +286,7 @@ switch(strtolower($args[0])){
                         Thanks,
                         ~Administration");
                 header('Location: http://scripts.citizensnpcs.com/login');
-                $_SESSION['justRegistered'] = true;
+                $_SESSION['loginMessage'] = 'You have now been registered and can log in. You will not be able to post until you verify your email.';
                 exit;
             }
         }else{

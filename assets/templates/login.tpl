@@ -4,7 +4,7 @@
         <br />
         <div class="well well-large">
         {if $loginError }<div class="alert alert-error"><strong>{$loginError}</strong></div><br /><br />{/if}
-        {if $registerFinished}<div class="alert alert-success"><strong>{$registerFinished}</strong></div><br /><div class="alert alert-info"><strong>Email confirmation is currently broken.</strong></div><br />{/if}
+        {if $loginMessage}<div class="alert alert-success"><strong>{$loginMessage}</strong></div>{/if}
         
         <input type='hidden' name='login' id='login' value='1'/>
         {if $userError}<div class="control-group error">{/if}<label for='username' >Username:</label>

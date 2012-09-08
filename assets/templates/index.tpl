@@ -26,7 +26,8 @@
                           <li><a href="#">Separated link</a></li>
                           <li><a href="#">One more separated link</a></li>
                         </ul>
-                      </li>
+                      </li>{if $admin}
+                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin</a></li>{/if}
                     </ul>
                     <form class="navbar-search pull-left" action="">
                       <input type="text" class="search-query" placeholder="Search">
@@ -36,7 +37,7 @@
                       <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown">{$username} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                          <li><a href="http://scripts.citizensnpcs.com/user/{$username}/">Your Profile</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/user/{$username}">Your Profile</a></li>
                           <li><a href="http://scripts.citizensnpcs.com/settings">Settings</a></li>
                           <li><a href="#">Something else here</a></li>
                           <li class="divider"></li>
@@ -46,7 +47,7 @@
                       {else}
                       <li>
                         <ul class="nav">
-                          <li><a href="http://scripts.citizensnpcs.com/login">Login/Register</a></li>
+                          <li {if $activePage=="login"}class="active"{/if}><a href="http://scripts.citizensnpcs.com/login">Login/Register</a></li>
                         </ul>
                       </li>
                       {/if}
