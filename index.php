@@ -167,6 +167,11 @@ switch(strtolower($args[0])){
         $smarty->assign('loginMessage', false);
         $smarty->assign('passwordError', false);
         $smarty->assign('userError', false);
+        $smarty->assign('loginInfo', false);
+        if(isset($_SESSION['loginInfo'])){
+            $smarty->assign('loginInfo', $_SESSION['loginInfo']);
+            unset($_SESSION['loginInfo']);
+        }
         if(isset($_SESSION['loginMessage'])){
             $smarty->assign('loginMessage', $_SESSION['loginMessage']);
             unset($_SESSION['loginMessage']);
@@ -294,26 +299,43 @@ switch(strtolower($args[0])){
         }
         break;
     case 'post':
+        if(!$_SESSION['loggedIn']){
+            $_SESSION['loginInfo'] = 'You must be logged in to do that!';
+            header('Location: http://scripts.citizensnpcs.com/login');
+            exit;
+        }
+        $output = 'post.tpl';
         break;
     case 'verify':
         $user = htmlspecialchars($args[2]);
-        $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND confirmed=false");
+        $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND status=0");
         if(!isset($args[2]) || !isset($args[3]) || $args[2]!=md5($args[3]) || $query->num_rows===0){
             // Something's wrong.
             header('Location: http://scripts.citizensnpcs.com/');
             exit;
         }else{
             // Verify user
-            $connectionHandle->query("UPDATE repo_users SET 'confirmed'=true WHERE 'username'='$user'");
-            $smarty->assign('registerFinished', 'You have successfully confirmed your email. You may now log in.');
-            $output = 'login.tpl';
+            $connectionHandle->query("UPDATE repo_users SET status=1 WHERE username='$user'");
+            $_SESSION['loginMessage'] = 'You have successfully confirmed your email. You may now log in.';
+            header('Location: http://scripts.citizensnpcs.com/login');
+            exit;
         }
         break;
     case 'edit':
         break;
     case 'search':
         break;
+    case 'admin':
+        $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username=".$_SESSION['username']." AND staff=1");
+        if(!$_SESSION['loggedIn'] || $query->num_rows!==1){
+            header('Location: http://scripts.citizensnpcs.com/login');
+            $_SESSION['loginInfo'] = 'You must be logged in to do that!';
+            exit;
+        }
+        $output = 'admin.tpl';
+        break;
     case 'list':
+        $output = 'list.tpl';
         break;
     case 'view':
         $pubID = addslashes(strtolower($args[1]));
