@@ -1,16 +1,19 @@
 <?php
+ini_set('display_errors', 'On');
 session_start();
-
+if(!isset($_SESSION['loggedIn'])){ $_SESSION['loggedIn'] = false; }
+error_reporting(E_ALL);
+date_default_timezone_set('America/New_York');
 
 // Get the arguments from the url
 $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
 $args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
 
-// Recaptcha
-require_once('assets/recaptchalib.php');
+// AreYouAHuman
+require_once('assets/ayah.php');
 
 function alphaID($in, $to_num = false, $pad_up = false){
-/**
+/*
  * Translates a number to a short alhanumeric version
  * 
  * @author    Kevin van Zonneveld <kevin@vanzonneveld.net>
@@ -135,32 +138,42 @@ function validEmail($email){
 // Smarty
 include('assets/Smarty/Smarty.class.php');
 $smarty = new Smarty;
-$smarty->setTemplateDir('/var/www/computercraft/repo/assets/templates');
-$smarty->setCompileDir('/var/www/computercraft/repo/assets/Smarty/templates_c');
-$smarty->setCacheDir('/var/www/computercraft/repo/assets/Smarty/cache');
-$smarty->setConfigDir('/var/www/computercraft/repo/assets/Smarty/configs');
-$smarty->assign($loginStatus, 1);
+$smarty->setTemplateDir('/usr/share/nginx/www/scripts/assets/templates');
+$smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c');
+$smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
+$smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
+$smarty->assign('loggedIn', $_SESSION['loggedIn']);
+if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
 
 // This is just on git.
 include('password.php');
-$connectionHandle = new mysqli('localhost', 'ComputerCraft', $password, 'ComputerCraft');
+$connectionHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
 include('assets/bcrypt.php');
 function isValidLogin($user, $password){
-    $bCrypt = new Bcrypt(24);
+    $bCrypt = new Bcrypt(12);
     $username = htmlspecialchars($user);
-    #$result = $connectionHandle->query("SELECT * FROM repo_users WHERE name='$username'");
-    #$row = $result->fetch_assoc();
-    #return $bCrypt->verify($password, $row['pass']);
+    $result = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
+    $row = $result->fetch_assoc();
+    return $bCrypt->verify($password, $row['password']);
     return false;
 }
-
+$bCrypt = new Bcrypt(12);
 switch(strtolower($args[0])){
     case 'login':
+        $smarty->assign('loginError', false);
+        $smarty->assign('registerFinished', false);
+        $smarty->assign('passwordError', false);
+        $smarty->assign('userError', false);
+        if(isset($_SESSION['justRegistered'])){
+            unset($_SESSION['justRegistered']);
+            $smarty->assign('registerFinished', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
+        }
         if(isset($_POST['login'])){
             // Checks
             if($_POST['username']=="" || $_POST['password']==""){
                 $smarty->assign('username', $_POST['username']);
                 $smarty->assign('loginError', 'You must enter both a username and password.');
+                $smarty->assign('userError', true);
                 $smarty->assign('passwordError', true);
                 $output = 'login.tpl';
             }elseif(!isValidLogin($_POST['username'], $_POST['password'])){
@@ -170,10 +183,14 @@ switch(strtolower($args[0])){
                 $output = 'login.tpl';
             }else{
                 // Login
+                $_SESSION['loggedIn'] = true;
+                $_SESSION['username'] = $_POST['username'];
+                header('Location: http://scripts.citizensnpcs.com/');
+                exit;
             }
-        }elseif($_SESSION['isLoggedIn']){
+        }elseif($_SESSION['loggedIn']){
             // Are they already logged in?
-            header('Location: http://repo.computercraft.org/user/'.$_SESSION['username'].'/');
+            header('Location: http://scripts.citizensnpcs.com/user/'.$_SESSION['username'].'/');
             exit;
         }else{
             $output = 'login.tpl';
@@ -182,9 +199,14 @@ switch(strtolower($args[0])){
     case 'logout':
         break;
     case 'register':
-        $smarty->assign('recaptcha', recaptcha_get_html($publicKey, 'Bad reCAPTCHA!'));
+        $ayah = new AYAH($publisherKey, $scoringKey);
+        $smarty->assign('registerError', false);
+        $smarty->assign('usernameError', false);
+        $smarty->assign('emailError', false);
+        $smarty->assign('passwordError', false);
+        $smarty->assign('ayahError', false);
+        $smarty->assign('ayah', $ayah->getPublisherHTML());
         if(isset($_POST['register'])){
-            $captcha = recaptcha_check_answer($privateKey, $_SERVER["REMOTE_ADDR"], $_POST["recaptcha_challenge_field"], $_POST["recaptcha_response_field"]);
             $email = htmlentities($_POST['email']);
             $emailQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE email='$email'");
             $user = htmlentities($_POST['username']);
@@ -217,7 +239,7 @@ switch(strtolower($args[0])){
                 $smarty->assign('emailError', true);
                 $smarty->assign('registerError', 'Invalid email address!');
                 $output = 'register.tpl';
-            }elseif($emailQuery->num_rows===0){
+            }elseif($emailQuery->num_rows>0){
                 // Make sure the email address isn't being used
                 $smarty->assign('username', $_POST['username']);
                 $smarty->assign('email', $_POST['email']);
@@ -231,26 +253,29 @@ switch(strtolower($args[0])){
                 $smarty->assign('userError', true);
                 $smarty->assign('registerError', 'Username already in use!');
                 $output = 'register.tpl';
-            }elseif(!$captcha->is_valid){
-                // Make sure the reCaptcha was correct
+            }elseif(!$ayah->scoreResult()){
+                // Make sure the AYAH was correct
                 $smarty->assign('username', $_POST['username']);
                 $smarty->assign('email', $_POST['email']);
-                $smarty->assign('captchaError', true);
-                $smarty->assign('registerError', "The reCAPTCHA wasn't entered correctly. Go back and try it again. ($captcha->error)");
+                $smarty->assign('ayahError', true);
+                $smarty->assign('registerError', "The AreYouAHuman game wasn't completed properly. Please try it again.");
                 $output = 'register.tpl';
             }else{
                 // Register
-                $connectionHandle->query("INSERT INTO repo_users('id', 'username', 'email', 'password', 'confirmed', 'staff') VALUES ('NULL', '$user', '$email', false, false)");
+                $bCrypt = new Bcrypt(12);
+                $pass = $bCrypt->hash($_POST['password']);
+                $connectionHandle->query("INSERT INTO repo_users (id, username, password, email, status, staff) VALUES ('NULL', '$user', '$pass', '$email', '0', false)") or die("MYSQL ERROR!");
                 // Send them their confirmation email, too.
                 $confirmationCode = md5($user);
                 mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
                         Before you can begin using the site, you must first confirm your account by clicking this link:
-                        http://repo.computercraft.org/verify/$user/$confirmationCode/
+                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/
                         
                         Thanks,
                         ~Administration");
-                $smarty->assign('registerFinished', 'You have now been registered and can log in. You will not be able to post until you verify your email.');
-                $output = 'login.tpl';
+                header('Location: http://scripts.citizensnpcs.com/login');
+                $_SESSION['justRegistered'] = true;
+                exit;
             }
         }else{
             $output = 'register.tpl';
@@ -263,7 +288,7 @@ switch(strtolower($args[0])){
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND confirmed=false");
         if(!isset($args[2]) || !isset($args[3]) || $args[2]!=md5($args[3]) || $query->num_rows===0){
             // Something's wrong.
-            header('Location: http://repo.computercraft.org/');
+            header('Location: http://scripts.citizensnpcs.com/');
             exit;
         }else{
             // Verify user
@@ -310,10 +335,6 @@ switch(strtolower($args[0])){
 /*
  * If the page is supposed to read raw data, echo it and die.
  */
-if($page=='raw'){
-    include('pages/raw.php');
-    exit;
-}
 if(!isset($output)){ $smarty->assign('output', '404.tpl'); }else{ $smarty->assign('output', $output); }
 $smarty->display('index.tpl');
 ?>

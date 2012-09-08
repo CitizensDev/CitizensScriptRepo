@@ -14,10 +14,10 @@
         <input class="control-label" type='password' name='password' id='password' maxlength="50" /><br />
         <label for='password' >Repeat Password:</label>
         <input class="control-label" type='password' name='passwordConfirm' id='password' maxlength="50" /><br />{if $passwordError}</div>{/if}
-        {if $captchaError}<div class="control-group error">{/if}<label for='recaptcha' >reCAPTCHA:</label>{if $captchaError}</div>{/if}
-        {$recaptcha}
+        {if $ayahError}<div class="control-group error">{/if}<label for='ayah' >Are You A Human?:</label>{if $ayahError}</div>{/if}
+        {$ayah}
         <br /><br /><p><small>All fields are required</small></p>
-        <input class="btn btn-primary" type='submit' name='Submit' value='Submit' />
+        <input class="btn btn-primary" type='Submit' name='Submit' value=' GO ' />
         </div>
     </fieldset>
 </form>

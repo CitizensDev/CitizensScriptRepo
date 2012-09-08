@@ -9,12 +9,12 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                   </a>
-                  <a class="brand" href="http://repo.computercraft.org/">Denizen Script Repo</a>
+                  <a class="brand" href="http://scripts.citizensnpcs.com/">Citizens Script Repo</a>
                   <div class="nav-collapse">
                     <ul class="nav">
-                      <li{if $activePage=="home"} class="active"{/if}><a href="http://repo.computercraft.org/">Home</a></li>
-                      <li{if $activePage=="link1"} class="active"{/if}><a href="http://repo.computercraft.org/list">List</a></li>
-                      <li{if $activePage=="link2"} class="active"{/if}><a href="http://repo.computercraft.org/post">Post</a></li>
+                      <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/">Home</a></li>
+                      <li{if $activePage=="link1"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list">List</a></li>
+                      <li{if $activePage=="link2"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post">Post</a></li>
                       <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
                         <ul class="dropdown-menu">
@@ -36,17 +36,17 @@
                       <li class="dropdown">
                         <a href="" class="dropdown-toggle" data-toggle="dropdown">{$username} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                          <li><a href="http://repo.computercraft.org/user/{$username}/">Your Profile</a></li>
-                          <li><a href="http://repo.computercraft.org/settings">Settings</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/user/{$username}/">Your Profile</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/settings">Settings</a></li>
                           <li><a href="#">Something else here</a></li>
                           <li class="divider"></li>
-                          <li><a href="http://repo.computercraft.org/logout">Logout</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/logout">Logout</a></li>
                         </ul>
                       </li>
                       {else}
                       <li>
                         <ul class="nav">
-                          <li><a href="http://repo.computercraft.org/login">Login/Register</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/login">Login/Register</a></li>
                         </ul>
                       </li>
                       {/if}

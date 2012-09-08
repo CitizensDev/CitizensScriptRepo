@@ -1,5 +1,5 @@
             <footer class="footer">
-                <p class="pull-right">Copyright &copy; 2012 - Denizen</p>
+                <center style="padding-bottom:12px">Copyright &copy; 2012 - CitizensNPCs</center>
             </footer>
         </div>
     </body>

@@ -7,13 +7,13 @@
         {if $registerFinished}<div class="alert alert-success"><strong>{$registerFinished}</strong></div><br /><div class="alert alert-info"><strong>Email confirmation is currently broken.</strong></div><br />{/if}
         
         <input type='hidden' name='login' id='login' value='1'/>
-        <label for='username' >Username:</label>
-        <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />
+        {if $userError}<div class="control-group error">{/if}<label for='username' >Username:</label>
+        <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />{if $userError}</div>{/if}
         {if $passwordError}<div class="control-group error">{/if}<label for='password' >Password:</label>
         <input class="control-label" type='password' name='password' id='password' maxlength="50" /><br />{if $passwordError}</div>{/if}
         <input class="btn btn-primary" type='submit' name='Submit' value='Submit' />
         <br /><br /><p>Don't have a login? <a href="register">Register now!</a>
-        <br />Forgot your password? <a href="http://repo.computercraft.org/recover">Recover it!</a></p>
+        <br />Forgot your password? <a href="http://scripts.citizensnpcs.com/recover">Recover it!</a></p>
         </div>
     </fieldset>
 </form>
