@@ -136,10 +136,32 @@ function validEmail($email){
    }
    return $isValid;
 }
+function random_string(){
+    $character_set_array = array();
+    $character_set_array[] = array('count' => 4, 'characters' => 'abcdefghijklmnopqrstuvwxyz');
+    $character_set_array[] = array('count' => 2, 'characters' => '0123456789');
+    $temp_array = array();
+    foreach ($character_set_array as $character_set) {
+        for ($i = 0; $i < $character_set['count']; $i++) {
+            $temp_array[] = $character_set['characters'][rand(0, strlen($character_set['characters']) - 1)];
+        }
+    }
+    shuffle($temp_array);
+    return implode('', $temp_array);
+}
+function createPubID(){
+    $connectionHandle = $GLOBALS['connectionHandle'];
+    // Dangerous, but meh. Likelyhood of it getting stuck in a loop approaches infintesimal values quickly.
+    while(true){
+        $outputID = random_string();
+        $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$outputID'");
+        if($query->num_rows==0){ return $outputID; }
+    }
+}
 
 // Handle search queries in the string
 if(isset($_POST['q'])){
-    $query = str_replace("%20", "+", $_POST['q']);
+    $query = str_replace(array("%20", " "), "+", $_POST['q']);
     header('Location: http://scripts.citizensnpcs.com/search/'.$query);
     exit;
 }
