@@ -29,8 +29,8 @@
                       </li>{if $admin}
                       <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin</a></li>{/if}
                     </ul>
-                    <form class="navbar-search pull-left" action="">
-                      <input type="text" class="search-query" placeholder="Search">
+                    <form class="navbar-search pull-left" id="searchQuery" method="post" action="http://scripts.citizensnpcs.com/search">
+                      <input type="text" class="search-query" name='q' placeholder="Search">
                     </form>
                     <ul class="nav pull-right">
                       {if $loggedIn}

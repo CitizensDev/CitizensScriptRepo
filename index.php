@@ -8,7 +8,8 @@ date_default_timezone_set('America/New_York');
 
 // Get the arguments from the url
 $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
-$args = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
+$path = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
+array_shift($_GET);
 
 // AreYouAHuman
 require_once('assets/ayah.php');
@@ -136,6 +137,13 @@ function validEmail($email){
    return $isValid;
 }
 
+// Handle search queries in the string
+if(isset($_POST['q'])){
+    $query = str_replace("%20", "+", $_POST['q']);
+    header('Location: http://scripts.citizensnpcs.com/search/'.$query);
+    exit;
+}
+
 // Smarty
 include('assets/Smarty/Smarty.class.php');
 $smarty = new Smarty;
@@ -146,6 +154,31 @@ $smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
 $smarty->assign('loggedIn', $_SESSION['loggedIn']);
 $smarty->assign('admin', $_SESSION['admin']);
 if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
+
+// Script handler class
+class ScriptHandler{
+    public $connectionHandle;
+    protected $id;
+    public $dataArray;
+    function __construct($id){
+        $this->connectionHandle = $GLOBALS['connectionHandle'];
+        $id = int($id);
+        $this->id = $id;
+        $query = $this->connectionHandle->query("SELECT * FROM repo_entries WHERE id='$id");
+        if($query===false || $query->num_rows!==1){
+            return false;
+        }else{
+            $this->dataArray = $query->fetch_assoc;
+        }
+    }
+}
+
+
+// Get rating
+function getRating($id){
+    $id = int($id);
+    $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_ratings WHERE scriptID='$id'");
+}
 
 // This is just on git.
 include('password.php');
@@ -160,7 +193,7 @@ function isValidLogin($user, $password){
     return false;
 }
 $bCrypt = new Bcrypt(12);
-switch(strtolower($args[0])){
+switch(strtolower($path[0])){
     case 'login':
         $smarty->assign('activePage', 'login');
         $smarty->assign('loginError', false);
@@ -300,16 +333,16 @@ switch(strtolower($args[0])){
         break;
     case 'post':
         if(!$_SESSION['loggedIn']){
-            $_SESSION['loginInfo'] = 'You must be logged in to do that!';
+            $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
             header('Location: http://scripts.citizensnpcs.com/login');
             exit;
         }
         $output = 'post.tpl';
         break;
     case 'verify':
-        $user = htmlspecialchars($args[2]);
+        $user = htmlspecialchars($path[2]);
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND status=0");
-        if(!isset($args[2]) || !isset($args[3]) || $args[2]!=md5($args[3]) || $query->num_rows===0){
+        if(!isset($path[2]) || !isset($path[3]) || $path[2]!=md5($path[3]) || $query->num_rows===0){
             // Something's wrong.
             header('Location: http://scripts.citizensnpcs.com/');
             exit;
@@ -324,6 +357,9 @@ switch(strtolower($args[0])){
     case 'edit':
         break;
     case 'search':
+        $query = htmlspecialchars(urldecode($path[1]));
+        $smarty->assign('searchQuery', $query);
+        $output = 'result.tpl';
         break;
     case 'admin':
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username=".$_SESSION['username']." AND staff=1");
@@ -332,13 +368,14 @@ switch(strtolower($args[0])){
             $_SESSION['loginInfo'] = 'You must be logged in to do that!';
             exit;
         }
+        $smarty->assign('activePage', 'admin');
         $output = 'admin.tpl';
         break;
     case 'list':
         $output = 'list.tpl';
         break;
     case 'view':
-        $pubID = addslashes(strtolower($args[1]));
+        $pubID = addslashes(strtolower($path[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         if($query->num_rows==0){ $output='unknownPage.tpl'; }else{
             // $dataToUse gets taken by view.php and turned into the main page.
@@ -348,10 +385,15 @@ switch(strtolower($args[0])){
         }
         break;
     case 'user':
-        break;
-    case 'admin':
+        if(!$_SESSION['loggedIn']){
+            $_SESSION['loginInfo'] = 'You must be logged in to view user profiles!';
+            header('Location: http://scripts.citizensnpcs.com/login');
+            exit;
+        }
         break;
     case '':
+    case 'index':
+    case 'home':
         $smarty->assign('activePage', 'home');
         $output = 'home.tpl';
         break;
@@ -359,12 +401,6 @@ switch(strtolower($args[0])){
         $output = '404.tpl';
         break;
 }
-
-
-/*
- * If the page is supposed to handle cookies, write them.
- */
-
 
 /*
  * If the page is supposed to read raw data, echo it and die.
