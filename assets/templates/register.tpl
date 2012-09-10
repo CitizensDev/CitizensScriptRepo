@@ -1,10 +1,10 @@
 <form id='register' action='' method='post' accept-charset='UTF-8'>
     <fieldset>
         <legend>Register</legend>
-        <p>An account is required for most of the actions on the site. Your email address is required both to allow for password recovery and prevent spam.</p>
+        <p>An account is required for most of the actions on the site. Your email address is required both to allow for password recovery and prevent spam registrations.</p>
         <br />
         <div class="well well-large">
-        {if $registerError }<div class="alert alert-error"><strong>{$registerError}</strong></div><br /><br />{/if}
+        {if $registerError }<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$registerError}</strong></div>{/if}
         <input type='hidden' name='register' id='register' value='1'/>
         {if $usernameError}<div class="control-group error">{/if}<label for='username' >Username:</label>
         <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />{if $usernameError}</div>{/if}

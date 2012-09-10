@@ -175,6 +175,7 @@ $smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
 $smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
 $smarty->assign('loggedIn', $_SESSION['loggedIn']);
 $smarty->assign('admin', $_SESSION['admin']);
+$smarty->assign('adminNeeded', false);
 if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
 
 // Script handler class
@@ -193,13 +194,17 @@ class ScriptHandler{
             $this->dataArray = $query->fetch_assoc;
         }
     }
-}
-
-
-// Get rating
-function getRating($id){
-    $id = int($id);
-    $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_ratings WHERE scriptID='$id'");
+    function getAuthor(){
+        return $this->dataArray['author'];
+    }
+    function getLikes(){
+        return $this->dataArray['likes'];
+    }
+    function flag($username){
+        $id = $this->id;
+        $username = htmlspecialchars($username);
+        $this->connectionHandle->query("INSERT INTO repo_flags (id, author, type, scriptID) VALUES ('NULL', '$username', '1', '$id')");
+    }
 }
 
 // This is just on git.
@@ -211,10 +216,19 @@ function isValidLogin($user, $password){
     $username = htmlspecialchars($user);
     $result = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
     $row = $result->fetch_assoc();
-    return $bCrypt->verify($password, $row['password']);
-    return false;
+    if($bCrypt->verify($password, $row['password'])){ return true; }else{ return false; }
+}
+function isActiveUser($user){
+    $username = htmlspecialchars($user);
+    $result = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
+    $row = $result->fetch_assoc();
+    if($row['status']==1){ return true; }else{ return false; }
 }
 $bCrypt = new Bcrypt(12);
+
+#$query2 = $connectionHandle->query("SELECT * FROM repo_flags");
+#if($query2->num_rows>0){ $smarty->assign('adminNeeded', true); }
+
 switch(strtolower($path[0])){
     case 'login':
         $smarty->assign('activePage', 'login');
@@ -244,6 +258,11 @@ switch(strtolower($path[0])){
                 $smarty->assign('loginError', 'Invalid username or password!');
                 $smarty->assign('passwordError', true);
                 $output = 'login.tpl';
+            }elseif(!isActiveUser($_POST['username'])){
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('loginError', 'You must activate your email before you can log in! <a href="http://scripts.citizensnpcs.com/resendConfirmation">Resend confirmation email.</a>');
+                $_SESSION['attemptedUsername'] = htmlspecialchars($_POST['username']);
+                $output = 'login.tpl';
             }else{
                 // Login
                 $_SESSION['loggedIn'] = true;
@@ -269,6 +288,19 @@ switch(strtolower($path[0])){
         $_SESSION['loginMessage'] = 'You have been successfully logged out.';
         header('Location: http://scripts.citizensnpcs.com/login');
         exit;
+        break;
+    case 'resendConfirmation':
+        $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='".$_SESSION['attemptedUsername']."'");
+        $row = $query->fetch_assoc;
+        mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
+                        Before you can begin using the site, you must first confirm your account by clicking this link:
+                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/
+                        
+                        Thanks,
+                        ~Administration");
+        $_SESSION['loginMessage'] = 'Confirmation email successfully sent to '.$row['email'].'!';
+        header('Location: http://scripts.citizensnpcs.com/login');
+        $output = 'login.tpl';
         break;
     case 'register':
         $ayah = new AYAH($publisherKey, $scoringKey);
@@ -346,7 +378,7 @@ switch(strtolower($path[0])){
                         Thanks,
                         ~Administration");
                 header('Location: http://scripts.citizensnpcs.com/login');
-                $_SESSION['loginMessage'] = 'You have now been registered and can log in. You will not be able to post until you verify your email.';
+                $_SESSION['loginMessage'] = 'You have now been registered, but must confirm your email before you can login.';
                 exit;
             }
         }else{
@@ -399,9 +431,9 @@ switch(strtolower($path[0])){
     case 'view':
         $pubID = addslashes(strtolower($path[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-        if($query->num_rows==0){ $output='unknownPage.tpl'; }else{
+        if($query->num_rows==0 && false){ $output='404.tpl'; }else{
             // $dataToUse gets taken by view.php and turned into the main page.
-            $smarty->assign('dataToUse', $query->fetch_assoc());
+            #$smarty->assign('dataToUse', $query->fetch_assoc());
             $smarty->assign('activePage', 'view');
             $output = 'view.tpl';
         }
@@ -412,6 +444,14 @@ switch(strtolower($path[0])){
             header('Location: http://scripts.citizensnpcs.com/login');
             exit;
         }
+        break;
+    case 'recover':
+        if(isset($_POST['recover'])){
+            $_SESSION['loginInfo'] = 'A new password has been sent to your email address!';
+            header('Location: http://scripts.citizensnpcs.com/login');
+            exit;
+        }
+        $output = 'recover.tpl';
         break;
     case '':
     case 'index':
@@ -429,4 +469,5 @@ switch(strtolower($path[0])){
  */
 if(!isset($output)){ $smarty->assign('output', '404.tpl'); }else{ $smarty->assign('output', $output); }
 $smarty->display('index.tpl');
+if(isset($_GET['debug']) && $_SESSION['username']=='AgentKid'){ var_dump($GLOBALS); }
 ?>

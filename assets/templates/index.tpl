@@ -27,7 +27,7 @@
                           <li><a href="#">One more separated link</a></li>
                         </ul>
                       </li>{if $admin}
-                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin</a></li>{/if}
+                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin{if $adminNeeded}(!){/if}</a></li>{/if}
                     </ul>
                     <form class="navbar-search pull-left" id="searchQuery" method="post" action="http://scripts.citizensnpcs.com/search">
                       <input type="text" class="search-query" name='q' placeholder="Search">
@@ -58,6 +58,9 @@
             </div><!-- /navbar -->
         </section>
         <div class="container">
+            <div class="alert alert-info">
+                <strong>Notice!</strong> This site is still in development. Some features may not work properly.
+            </div>
             {include file="$output"}
 
 

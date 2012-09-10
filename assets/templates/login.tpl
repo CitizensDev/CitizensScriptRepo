@@ -3,9 +3,9 @@
         <legend>Login</legend>
         <br />
         <div class="well well-large">
-        {if $loginError }<div class="alert alert-error"><strong>{$loginError}</strong></div><br /><br />{/if}
-        {if $loginMessage}<div class="alert alert-success"><strong>{$loginMessage}</strong></div>{/if}
-        {if $loginInfo}<div class="alert alert-info"><strong>{$loginInfo}</strong></div>{/if}
+        {if $loginError }<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$loginError}</strong></div><br /><br />{/if}
+        {if $loginMessage}<div class="alert alert-success"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$loginMessage}</strong></div>{/if}
+        {if $loginInfo}<div class="alert alert-info"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$loginInfo}</strong></div>{/if}
         
         <input type='hidden' name='login' id='login' value='1'/>
         {if $userError}<div class="control-group error">{/if}<label for='username' >Username:</label>
