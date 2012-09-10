@@ -227,7 +227,7 @@ function isActiveUser($user){
 $bCrypt = new Bcrypt(12);
 
 #$query2 = $connectionHandle->query("SELECT * FROM repo_flags");
-#if($query2->num_rows>0){ $smarty->assign('adminNeeded', true); }
+//if($query2->num_rows>0){ $smarty->assign('adminNeeded', true); }
 
 switch(strtolower($path[0])){
     case 'login':
@@ -425,7 +425,43 @@ switch(strtolower($path[0])){
         $smarty->assign('activePage', 'admin');
         $output = 'admin.tpl';
         break;
+	case 'support':
+		$output = 'support.tpl';
+		break;
     case 'list':
+		$smarty->assign('activePage', 'list');
+		$numberPerPage = 20;
+		$pageNumber = 1;
+		$resultPages = array(1, 2, 3, 4, 5);
+		// URL format should be http://scripts.citizensnpcs.com/list/<PAGENUM>/<NUMPERPAGE>
+		if(isset($path[1])){
+			// Page is set
+			$pageNumber = intval($path[1]);
+			if(isset($path[2])){
+				// Number per page is set
+				$numberPerPage = intval($path[2]);
+			}
+		}
+		$numberOfPages = 15;
+		if($pageNumber+2>$numberOfPages){
+			// The limit should be the max number
+			$limit = $numberOfPages;
+			$var1 = $numberOfPages-$pageNumber;
+			$var2 = 4-$var1;
+			$start = $pageNumber-$var2;
+		}else{
+			$limit = $pageNumber+2;
+			$start = $pageNumber-2;
+		}
+		if($pageNumber<3){
+			$resultPages = array(1, 2, 3, 4, 5);
+		}else{
+			$resultPages = range($start, $limit);
+		}
+		$smarty->assign('resultPageNumber', $pageNumber);
+		$smarty->assign('resultsPerPage', $numberPerPage);
+		$smarty->assign('resultPages', $resultPages);
+		$minimumLimit = ($pageNumber-1)*$numberPerPage;
         $output = 'list.tpl';
         break;
     case 'view':
@@ -433,7 +469,10 @@ switch(strtolower($path[0])){
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         if($query->num_rows==0 && false){ $output='404.tpl'; }else{
             // $dataToUse gets taken by view.php and turned into the main page.
-            #$smarty->assign('dataToUse', $query->fetch_assoc());
+			#$data = $query->fetch_assoc();
+            #$smarty->assign('dataToUse', $data);
+			$newviews = $data['views']+1;
+			$connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
             $smarty->assign('activePage', 'view');
             $output = 'view.tpl';
         }
@@ -469,5 +508,4 @@ switch(strtolower($path[0])){
  */
 if(!isset($output)){ $smarty->assign('output', '404.tpl'); }else{ $smarty->assign('output', $output); }
 $smarty->display('index.tpl');
-if(isset($_GET['debug']) && $_SESSION['username']=='AgentKid'){ var_dump($GLOBALS); }
 ?>

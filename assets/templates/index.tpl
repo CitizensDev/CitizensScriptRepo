@@ -1,4 +1,14 @@
-{include file="header.tpl"}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Citizens Script Repo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap.min.css" type="text/css" media="screen" charset="utf-8">
+        <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap-responsive.min.css" type="text/css" media="screen" charset="utf-8">
+        <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/bootstrap.min.js"></script>
+    </head>
     <body class="preview" data-spy="scroll" data-target=".subnav" data-offset="50">
         <section id="navbar">
             <div class="navbar">
@@ -13,8 +23,8 @@
                   <div class="nav-collapse">
                     <ul class="nav">
                       <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/">Home</a></li>
-                      <li{if $activePage=="link1"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list">List</a></li>
-                      <li{if $activePage=="link2"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post">Post</a></li>
+                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list">List</a></li>
+                      <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post">Post</a></li>
                       <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
                         <ul class="dropdown-menu">
@@ -62,7 +72,9 @@
                 <strong>Notice!</strong> This site is still in development. Some features may not work properly.
             </div>
             {include file="$output"}
-
-
-
-{include file="footer.tpl"}
+            <footer class="footer">
+                <center style="padding-bottom:12px">Copyright &copy; 2012 - CitizensNPCs<br><a href="http://scripts.citizensnpcs.com/support">Support</a></center>
+            </footer>
+        </div>
+    </body>
+</html>
