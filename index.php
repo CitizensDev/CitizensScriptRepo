@@ -165,7 +165,37 @@ if(isset($_POST['q'])){
     header('Location: http://scripts.citizensnpcs.com/search/'.$query);
     exit;
 }
-
+function getCurrentTimeZone($username){
+    $username = htmlspecialchars($username);
+    $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
+    if($query!=false){
+        $row = $query->fetch_assoc();
+        return trim($row['timezone']);
+    }
+}
+function getTimeZoneOptions($active){
+    $timezone_identifiers = DateTimeZone::listIdentifiers();
+    $selected = '';
+    $data = null;
+    $continent = null;
+    foreach( $timezone_identifiers as $value ){
+        if ( preg_match( '/^(America|Antartica|Arctic|Asia|Atlantic|Europe|Indian|Pacific)\//', $value ) ){
+            $ex=explode("/",$value);//obtain continent,city
+            if ($continent!=$ex[0]){
+                if ($continent!="") $data = $data.'</optgroup>';
+                    $data = $data.'<optgroup label="'.$ex[0].'">';
+            }
+ 
+	    	$city=$ex[1];
+	    	$continent=$ex[0];
+                if($value==$active){ $selected='selected="selected"'; }
+                if(isset($ex[2])){ $city = implode("/",array($ex[1], $ex[2])); }
+	    	$data = $data.'<option value="'.$value.'" '.$selected.'>'.$city.'</option>';	    		
+	    }
+            $selected = '';
+    }
+    return $data;
+}
 // Smarty
 include('assets/Smarty/Smarty.class.php');
 $smarty = new Smarty;
@@ -282,6 +312,29 @@ switch(strtolower($path[0])){
             $output = 'login.tpl';
         }
         break;
+    case 'settings':
+        if(!$_SESSION['loggedIn']){
+            $_SESSION['loginInfo'] = 'You must be logged in to change settings!';
+            header('Location: http://scripts.citizensnpcs.com/login');
+            exit;
+        }
+        $smarty->assign('successMessage', false);
+        $currentTimezone = getCurrentTimeZone($_SESSION['username']);
+        $smarty->assign('timezones', getTimeZoneOptions($currentTimezone));
+        if(isset($_POST['Save'])){
+            // Handle the update.
+            if($_POST['timezone']!=$currentTimezone){
+                // They updated the timezone. Make the changes.
+                $newTimezone = htmlspecialchars($_POST['timezone']);
+                $connectionHandle->query("UPDATE repo_users SET timezone='$newTimezone' WHERE username='".$_SESSION['username']."'");
+                $currentTimezone = $newTimezone;
+            }
+            $smarty->assign('successMessage', "Successfully updated your settings.");
+        }
+        $smarty->assign('timezones', getTimeZoneOptions($currentTimezone));
+        $smarty->assign('activePage', 'settings');
+        $output = 'settings.tpl';
+        break;
     case 'logout':
         session_destroy();
         session_start();
@@ -368,7 +421,7 @@ switch(strtolower($path[0])){
                 // Register
                 $bCrypt = new Bcrypt(12);
                 $pass = $bCrypt->hash($_POST['password']);
-                $connectionHandle->query("INSERT INTO repo_users (id, username, password, email, status, staff) VALUES ('NULL', '$user', '$pass', '$email', '0', false)") or die("MYSQL ERROR!");
+                $connectionHandle->query("INSERT INTO repo_users (id, username, password, email, timezone, status, staff) VALUES ('NULL', '$user', '$pass', '$email', 'America/New_York', '0', false)") or die("MYSQL ERROR!");
                 // Send them their confirmation email, too.
                 $confirmationCode = md5($user);
                 mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
