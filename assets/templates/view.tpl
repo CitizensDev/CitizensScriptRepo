@@ -1,3 +1,3 @@
 <div class="span11 well well-small">
-    Stuff
+    {$code}
 </div><br><br><br><br>

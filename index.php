@@ -11,6 +11,9 @@ $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI'
 $path = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
 array_shift($_GET);
 
+// Mailer
+require_once('assets/phpmailer/mail.php');
+
 // AreYouAHuman
 require_once('assets/ayah.php');
 
@@ -196,6 +199,10 @@ function getTimeZoneOptions($active){
     }
     return $data;
 }
+
+// GeSHi
+require_once('assets/geshi.php');
+
 // Smarty
 include('assets/Smarty/Smarty.class.php');
 $smarty = new Smarty;
@@ -357,6 +364,7 @@ switch(strtolower($path[0])){
         break;
     case 'register':
         $ayah = new AYAH($publisherKey, $scoringKey);
+        $mailer = new Mailer();
         $smarty->assign('registerError', false);
         $smarty->assign('usernameError', false);
         $smarty->assign('emailError', false);
@@ -424,12 +432,11 @@ switch(strtolower($path[0])){
                 $connectionHandle->query("INSERT INTO repo_users (id, username, password, email, timezone, status, staff) VALUES ('NULL', '$user', '$pass', '$email', 'America/New_York', '0', false)") or die("MYSQL ERROR!");
                 // Send them their confirmation email, too.
                 $confirmationCode = md5($user);
-                mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
-                        Before you can begin using the site, you must first confirm your account by clicking this link:
-                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/
-                        
-                        Thanks,
-                        ~Administration");
+                $mailer->Subject = "Please verify your registrations at Citizens Script Repo.";
+                $mailer->Body = "Someone, probably you, registered with the username $user on the Citizens Script Repo.\nBefore you can begin using the site, you must first confirm your account by clicking on this link:
+                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/\nThanks,\n~Administration";
+                $mailer->AddAddress($email, $user);
+                $mailer->Send();
                 header('Location: http://scripts.citizensnpcs.com/login');
                 $_SESSION['loginMessage'] = 'You have now been registered, but must confirm your email before you can login.';
                 exit;
@@ -439,11 +446,53 @@ switch(strtolower($path[0])){
         }
         break;
     case 'post':
-        if(!$_SESSION['loggedIn']){
+		$smarty->assign('postError', false);
+		$smarty->assign('scriptError', false);
+		$smarty->assign('scriptCode', false);
+		$smarty->assign('description', false);
+		$smarty->assign('descriptionError', false);
+		$smarty->assign('typeError', false);
+		$smarty->assign('tagError', false);
+		$smarty->assign('tags', false);
+		if(!$_SESSION['loggedIn']){
             $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
             header('Location: http://scripts.citizensnpcs.com/login');
             exit;
         }
+		if(isset($_POST['SubmitScript'])){
+			var_dump($_POST);
+			// Run some checks, make sure the data is good.
+			$tagsRaw = explode(',', $_POST['tags']);
+			$tags = array();
+			foreach($tagsRaw as $tag){
+				if($tag!=""){ array_push($tags, trim($tag)); }
+			}
+			var_dump($tags);
+			if($_POST['Description']==""){
+				// Description is empty.
+				$smarty->assign('postError', "Description must not be empty!");
+				$smarty->assign('descriptionError', true);
+			}elseif($_POST['scriptCode']==""){
+				// Script code is empty
+				$smarty->assign('postError', "Code must not be empty!");
+				$smarty->assign('scriptError', true);
+			}elseif($_POST['typeOfScript']=="None"){
+				// No type has been selected!
+				$smarty->assign('postError', "Script type must be selected!");
+				$smarty->assign('typeError', true);
+			}elseif(count($tags)==0){
+				$smarty->assign('postError', "You must enter at least one tag!");
+				$smarty->assign('tagError', true);
+			}else{
+				$typeOfScript = intval($_POST['typeOfScript']);
+				$scriptCode = htmlspecialchars($_POST['scriptCode']);
+				$description = htmlspecialchars($_POST['Description']);
+			}
+			if(isset($_POST['scriptCode']) && $_POST['scriptCode']!=""){ $smarty->assign('scriptCode', $_POST['scriptCode']); }
+			if(isset($_POST['Description']) && $_POST['Description']!=""){ $smarty->assign('description', $_POST['Description']); }
+			if(isset($_POST['tags']) && $_POST['tags']!=""){ $smarty->assign('tags', $_POST['tags']); }
+		}
+		$smarty->assign('activePage', 'post');
         $output = 'post.tpl';
         break;
     case 'verify':
@@ -520,10 +569,15 @@ switch(strtolower($path[0])){
     case 'view':
         $pubID = addslashes(strtolower($path[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-        if($query->num_rows==0 && false){ $output='404.tpl'; }else{
+        if($query->num_rows==0 && false){
+            $output = '404.tpl';
+        }else{
             // $dataToUse gets taken by view.php and turned into the main page.
-			#$data = $query->fetch_assoc();
-            #$smarty->assign('dataToUse', $data);
+            $data = $query->fetch_assoc();
+            $smarty->assign('dataToUse', $data);
+            $geshi = new GeSHi($data[''], 'php');
+            $geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
+            $smarty->assign('code', $geshi->parse_code());
 			$newviews = $data['views']+1;
 			$connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
             $smarty->assign('activePage', 'view');
@@ -548,6 +602,7 @@ switch(strtolower($path[0])){
     case '':
     case 'index':
     case 'home':
+        if(isset($_POST['MainPageSearch'])){ var_dump($_POST); }
         $smarty->assign('activePage', 'home');
         $output = 'home.tpl';
         break;
