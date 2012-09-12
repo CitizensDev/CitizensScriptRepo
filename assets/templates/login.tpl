@@ -1,4 +1,4 @@
-<form id='login' action='' method='post' accept-charset='UTF-8'>
+<form id='login' method='post' accept-charset='UTF-8'>
     <fieldset>
         <legend>Login</legend>
         <br />
@@ -7,7 +7,7 @@
         {if $loginMessage}<div class="alert alert-success"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$loginMessage}</strong></div>{/if}
         {if $loginInfo}<div class="alert alert-info"><button type="button" class="close" data-dismiss="alert">X</button><strong>{$loginInfo}</strong></div>{/if}
         
-        <input type='hidden' name='login' id='login' value='1'/>
+        <input type='hidden' name='loginForm' id='loginForm' value='1'/>
         {if $userError}<div class="control-group error">{/if}<label for='username' >Username:</label>
         <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />{if $userError}</div>{/if}
         {if $passwordError}<div class="control-group error">{/if}<label for='password' >Password:</label>

@@ -1,1 +1,1 @@
-You searched for {$searchQuery}.
+You searched for {$searchQuery} with settings {foreach $searchSettings as $setting}{$setting}, {/foreach}.

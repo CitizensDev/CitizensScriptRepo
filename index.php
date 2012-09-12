@@ -165,8 +165,37 @@ function createPubID(){
 // Handle search queries in the string
 if(isset($_POST['q'])){
     $query = str_replace(array("%20", " "), "+", $_POST['q']);
-    header('Location: http://scripts.citizensnpcs.com/search/'.$query);
+    header('Location: http://scripts.citizensnpcs.com/search/'.$query.'/1/1/1/1');
     exit;
+}
+if(isset($_POST['q2'])){
+    $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
+	if(isset($_POST['1'])){
+		// Users
+		$query = $query."/1";
+	}else{
+		$query = $query."/0";
+	}
+	if(isset($_POST['2'])){
+		// Code
+		$query = $query."/1";
+	}else{
+		$query = $query."/0";
+	}
+	if(isset($_POST['3'])){
+		// Tags
+		$query = $query."/1";
+	}else{
+		$query = $query."/0";
+	}
+	if(isset($_POST['4'])){
+		// Descriptions
+		$query = $query."/1";
+	}else{
+		$query = $query."/0";
+	}
+    header('Location: http://scripts.citizensnpcs.com/search/'.$query);
+	exit;
 }
 function getCurrentTimeZone($username){
     $username = htmlspecialchars($username);
@@ -199,7 +228,13 @@ function getTimeZoneOptions($active){
     }
     return $data;
 }
-
+function getResults($queryHandle, $numberToGet, $pageNumber){
+	$outputArray = array();
+	while(count($outputArray)<$numberToGet){
+		$outputArray[count($outputArray)] = $queryHandle->fetch_assoc();
+	}
+	return $outputArray;
+}
 // GeSHi
 require_once('assets/geshi.php');
 
@@ -274,6 +309,7 @@ switch(strtolower($path[0])){
         $smarty->assign('passwordError', false);
         $smarty->assign('userError', false);
         $smarty->assign('loginInfo', false);
+        $smarty->assign('username', false);
         if(isset($_SESSION['loginInfo'])){
             $smarty->assign('loginInfo', $_SESSION['loginInfo']);
             unset($_SESSION['loginInfo']);
@@ -282,7 +318,7 @@ switch(strtolower($path[0])){
             $smarty->assign('loginMessage', $_SESSION['loginMessage']);
             unset($_SESSION['loginMessage']);
         }
-        if(isset($_POST['login'])){
+        if(isset($_POST['loginForm'])){
             // Checks
             if($_POST['username']=="" || $_POST['password']==""){
                 $smarty->assign('username', $_POST['username']);
@@ -364,14 +400,17 @@ switch(strtolower($path[0])){
         break;
     case 'register':
         $ayah = new AYAH($publisherKey, $scoringKey);
-        $mailer = new Mailer();
+        $mailer = new Mailer(true);
+        $smarty->assign('activePage', false);
+        $smarty->assign('username', false);
+        $smarty->assign('email', false);
         $smarty->assign('registerError', false);
         $smarty->assign('usernameError', false);
         $smarty->assign('emailError', false);
         $smarty->assign('passwordError', false);
         $smarty->assign('ayahError', false);
         $smarty->assign('ayah', $ayah->getPublisherHTML());
-        if(isset($_POST['register'])){
+        if(isset($_POST['registerForm'])){
             $email = htmlentities($_POST['email']);
             $emailQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE email='$email'");
             $user = htmlentities($_POST['username']);
@@ -436,9 +475,9 @@ switch(strtolower($path[0])){
                 $mailer->Body = "Someone, probably you, registered with the username $user on the Citizens Script Repo.\nBefore you can begin using the site, you must first confirm your account by clicking on this link:
                         http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/\nThanks,\n~Administration";
                 $mailer->AddAddress($email, $user);
-                $mailer->Send();
                 header('Location: http://scripts.citizensnpcs.com/login');
                 $_SESSION['loginMessage'] = 'You have now been registered, but must confirm your email before you can login.';
+                $_SESSION['loginError'] = $mailer->Send();
                 exit;
             }
         }else{
@@ -455,10 +494,10 @@ switch(strtolower($path[0])){
 		$smarty->assign('tagError', false);
 		$smarty->assign('tags', false);
 		if(!$_SESSION['loggedIn']){
-            $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
-            header('Location: http://scripts.citizensnpcs.com/login');
-            exit;
-        }
+                    $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
+                    header('Location: http://scripts.citizensnpcs.com/login');
+                    exit;
+                }
 		if(isset($_POST['SubmitScript'])){
 			var_dump($_POST);
 			// Run some checks, make sure the data is good.
@@ -513,8 +552,11 @@ switch(strtolower($path[0])){
     case 'edit':
         break;
     case 'search':
+        $smarty->assign('activePage', false);
         $query = htmlspecialchars(urldecode($path[1]));
+		$searchSettings = array($path[2], $path[3], $path[4], $path[5]);
         $smarty->assign('searchQuery', $query);
+		$smarty->assign('searchSettings', $searchSettings);
         $output = 'result.tpl';
         break;
     case 'admin':
@@ -527,30 +569,27 @@ switch(strtolower($path[0])){
         $smarty->assign('activePage', 'admin');
         $output = 'admin.tpl';
         break;
-	case 'support':
-		$output = 'support.tpl';
-		break;
+    case 'support':
+        $smarty->assign('activePage', false);
+        $output = 'support.tpl';
+        break;
     case 'list':
 		$smarty->assign('activePage', 'list');
+		$queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
 		$numberPerPage = 20;
 		$pageNumber = 1;
 		$resultPages = array(1, 2, 3, 4, 5);
-		// URL format should be http://scripts.citizensnpcs.com/list/<PAGENUM>/<NUMPERPAGE>
 		if(isset($path[1])){
-			// Page is set
 			$pageNumber = intval($path[1]);
-			if(isset($path[2])){
-				// Number per page is set
-				$numberPerPage = intval($path[2]);
-			}
+			if(isset($path[2])){ $numberPerPage = intval($path[2]); }
 		}
-		$numberOfPages = 15;
+		if($queryListing!=false){
+			$numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
+			$resultData = getResults($queryListing, $numberPerPage, $pageNumber);
+		}
 		if($pageNumber+2>$numberOfPages){
-			// The limit should be the max number
 			$limit = $numberOfPages;
-			$var1 = $numberOfPages-$pageNumber;
-			$var2 = 4-$var1;
-			$start = $pageNumber-$var2;
+			$start = $pageNumber-(4-($numberOfPages-$pageNumber));
 		}else{
 			$limit = $pageNumber+2;
 			$start = $pageNumber-2;
@@ -563,7 +602,6 @@ switch(strtolower($path[0])){
 		$smarty->assign('resultPageNumber', $pageNumber);
 		$smarty->assign('resultsPerPage', $numberPerPage);
 		$smarty->assign('resultPages', $resultPages);
-		$minimumLimit = ($pageNumber-1)*$numberPerPage;
         $output = 'list.tpl';
         break;
     case 'view':
@@ -602,7 +640,6 @@ switch(strtolower($path[0])){
     case '':
     case 'index':
     case 'home':
-        if(isset($_POST['MainPageSearch'])){ var_dump($_POST); }
         $smarty->assign('activePage', 'home');
         $output = 'home.tpl';
         break;

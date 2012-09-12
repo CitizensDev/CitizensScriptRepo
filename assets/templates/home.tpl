@@ -1,22 +1,20 @@
-<div class="well well-large">
-    <center>
+<div class="well well-large" style="margin-right: auto; margin-left: auto;">
         <h2>Search</h2>
-        <form id='mainPageSearch' action='' method='post' accept-charset='UTF-8'>
+        <form id='mainPageSearch' method='post' accept-charset='UTF-8'>
         <div class="input-append">
-            <input class="input-xxlarge" id="appendedInputButtons" size="50" type="text"><input class="btn" name='MainPageSearch' type="Submit" value='Search'>Search</button>
+            <input class="input-xxlarge" id="appendedInputButtons" name="searchBox" size="50" type="text" /><input class="btn" name='q2' type="Submit" value='Search' />
         </div>
         <label class="checkbox inline">
-            <input type="checkbox" id="1" value="1"> Users
+            <input type="checkbox" id="1" name="1" value="true"> Users
         </label>
         <label class="checkbox inline">
-            <input type="checkbox" id="2" value="2"> Code
+            <input type="checkbox" id="2" name="2" value="true"> Code
         </label>
         <label class="checkbox inline">
-            <input type="checkbox" id="3" value="3"> Tags
+            <input type="checkbox" id="3" name="3" value="true"> Tags
         </label>
         <label class="checkbox inline">
-            <input type="checkbox" id="4" value="4"> Descriptions
+            <input type="checkbox" id="4" name="4" value="true"> Descriptions
         </label>
         </form>
-    </center>
 </div>
