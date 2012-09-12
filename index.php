@@ -170,32 +170,32 @@ if(isset($_POST['q'])){
 }
 if(isset($_POST['q2'])){
     $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
-	if(isset($_POST['1'])){
-		// Users
-		$query = $query."/1";
-	}else{
-		$query = $query."/0";
-	}
-	if(isset($_POST['2'])){
-		// Code
-		$query = $query."/1";
-	}else{
-		$query = $query."/0";
-	}
-	if(isset($_POST['3'])){
-		// Tags
-		$query = $query."/1";
-	}else{
-		$query = $query."/0";
-	}
-	if(isset($_POST['4'])){
-		// Descriptions
-		$query = $query."/1";
-	}else{
-		$query = $query."/0";
-	}
+    if(isset($_POST['1'])){
+        // Users
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['2'])){
+        // Code
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['3'])){
+        // Tags
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['4'])){
+        // Descriptions
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
     header('Location: http://scripts.citizensnpcs.com/search/'.$query);
-	exit;
+    exit;
 }
 function getCurrentTimeZone($username){
     $username = htmlspecialchars($username);
@@ -218,22 +218,22 @@ function getTimeZoneOptions($active){
                     $data = $data.'<optgroup label="'.$ex[0].'">';
             }
  
-	    	$city=$ex[1];
-	    	$continent=$ex[0];
+            $city=$ex[1];
+            $continent=$ex[0];
                 if($value==$active){ $selected='selected="selected"'; }
                 if(isset($ex[2])){ $city = implode("/",array($ex[1], $ex[2])); }
-	    	$data = $data.'<option value="'.$value.'" '.$selected.'>'.$city.'</option>';	    		
-	    }
+            $data = $data.'<option value="'.$value.'" '.$selected.'>'.$city.'</option>';                
+        }
             $selected = '';
     }
     return $data;
 }
 function getResults($queryHandle, $numberToGet, $pageNumber){
-	$outputArray = array();
-	while(count($outputArray)<$numberToGet){
-		$outputArray[count($outputArray)] = $queryHandle->fetch_assoc();
-	}
-	return $outputArray;
+    $outputArray = array();
+    while(count($outputArray)<$numberToGet){
+        $outputArray[count($outputArray)] = $queryHandle->fetch_assoc();
+    }
+    return $outputArray;
 }
 // GeSHi
 require_once('assets/geshi.php');
@@ -485,53 +485,53 @@ switch(strtolower($path[0])){
         }
         break;
     case 'post':
-		$smarty->assign('postError', false);
-		$smarty->assign('scriptError', false);
-		$smarty->assign('scriptCode', false);
-		$smarty->assign('description', false);
-		$smarty->assign('descriptionError', false);
-		$smarty->assign('typeError', false);
-		$smarty->assign('tagError', false);
-		$smarty->assign('tags', false);
-		if(!$_SESSION['loggedIn']){
+        $smarty->assign('postError', false);
+        $smarty->assign('scriptError', false);
+        $smarty->assign('scriptCode', false);
+        $smarty->assign('description', false);
+        $smarty->assign('descriptionError', false);
+        $smarty->assign('typeError', false);
+        $smarty->assign('tagError', false);
+        $smarty->assign('tags', false);
+        if(!$_SESSION['loggedIn']){
                     $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
                     header('Location: http://scripts.citizensnpcs.com/login');
                     exit;
                 }
-		if(isset($_POST['SubmitScript'])){
-			var_dump($_POST);
-			// Run some checks, make sure the data is good.
-			$tagsRaw = explode(',', $_POST['tags']);
-			$tags = array();
-			foreach($tagsRaw as $tag){
-				if($tag!=""){ array_push($tags, trim($tag)); }
-			}
-			var_dump($tags);
-			if($_POST['Description']==""){
-				// Description is empty.
-				$smarty->assign('postError', "Description must not be empty!");
-				$smarty->assign('descriptionError', true);
-			}elseif($_POST['scriptCode']==""){
-				// Script code is empty
-				$smarty->assign('postError', "Code must not be empty!");
-				$smarty->assign('scriptError', true);
-			}elseif($_POST['typeOfScript']=="None"){
-				// No type has been selected!
-				$smarty->assign('postError', "Script type must be selected!");
-				$smarty->assign('typeError', true);
-			}elseif(count($tags)==0){
-				$smarty->assign('postError', "You must enter at least one tag!");
-				$smarty->assign('tagError', true);
-			}else{
-				$typeOfScript = intval($_POST['typeOfScript']);
-				$scriptCode = htmlspecialchars($_POST['scriptCode']);
-				$description = htmlspecialchars($_POST['Description']);
-			}
-			if(isset($_POST['scriptCode']) && $_POST['scriptCode']!=""){ $smarty->assign('scriptCode', $_POST['scriptCode']); }
-			if(isset($_POST['Description']) && $_POST['Description']!=""){ $smarty->assign('description', $_POST['Description']); }
-			if(isset($_POST['tags']) && $_POST['tags']!=""){ $smarty->assign('tags', $_POST['tags']); }
-		}
-		$smarty->assign('activePage', 'post');
+        if(isset($_POST['SubmitScript'])){
+            var_dump($_POST);
+            // Run some checks, make sure the data is good.
+            $tagsRaw = explode(',', $_POST['tags']);
+            $tags = array();
+            foreach($tagsRaw as $tag){
+                if($tag!=""){ array_push($tags, trim($tag)); }
+            }
+            var_dump($tags);
+            if($_POST['Description']==""){
+                // Description is empty.
+                $smarty->assign('postError', "Description must not be empty!");
+                $smarty->assign('descriptionError', true);
+            }elseif($_POST['scriptCode']==""){
+                // Script code is empty
+                $smarty->assign('postError', "Code must not be empty!");
+                $smarty->assign('scriptError', true);
+            }elseif($_POST['typeOfScript']=="None"){
+                // No type has been selected!
+                $smarty->assign('postError', "Script type must be selected!");
+                $smarty->assign('typeError', true);
+            }elseif(count($tags)==0){
+                $smarty->assign('postError', "You must enter at least one tag!");
+                $smarty->assign('tagError', true);
+            }else{
+                $typeOfScript = intval($_POST['typeOfScript']);
+                $scriptCode = htmlspecialchars($_POST['scriptCode']);
+                $description = htmlspecialchars($_POST['Description']);
+            }
+            if(isset($_POST['scriptCode']) && $_POST['scriptCode']!=""){ $smarty->assign('scriptCode', $_POST['scriptCode']); }
+            if(isset($_POST['Description']) && $_POST['Description']!=""){ $smarty->assign('description', $_POST['Description']); }
+            if(isset($_POST['tags']) && $_POST['tags']!=""){ $smarty->assign('tags', $_POST['tags']); }
+        }
+        $smarty->assign('activePage', 'post');
         $output = 'post.tpl';
         break;
     case 'verify':
@@ -554,9 +554,9 @@ switch(strtolower($path[0])){
     case 'search':
         $smarty->assign('activePage', false);
         $query = htmlspecialchars(urldecode($path[1]));
-		$searchSettings = array($path[2], $path[3], $path[4], $path[5]);
+        $searchSettings = array($path[2], $path[3], $path[4], $path[5]);
         $smarty->assign('searchQuery', $query);
-		$smarty->assign('searchSettings', $searchSettings);
+        $smarty->assign('searchSettings', $searchSettings);
         $output = 'result.tpl';
         break;
     case 'admin':
@@ -574,34 +574,34 @@ switch(strtolower($path[0])){
         $output = 'support.tpl';
         break;
     case 'list':
-		$smarty->assign('activePage', 'list');
-		$queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
-		$numberPerPage = 20;
-		$pageNumber = 1;
-		$resultPages = array(1, 2, 3, 4, 5);
-		if(isset($path[1])){
-			$pageNumber = intval($path[1]);
-			if(isset($path[2])){ $numberPerPage = intval($path[2]); }
-		}
-		if($queryListing!=false){
-			$numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
-			$resultData = getResults($queryListing, $numberPerPage, $pageNumber);
-		}
-		if($pageNumber+2>$numberOfPages){
-			$limit = $numberOfPages;
-			$start = $pageNumber-(4-($numberOfPages-$pageNumber));
-		}else{
-			$limit = $pageNumber+2;
-			$start = $pageNumber-2;
-		}
-		if($pageNumber<3){
-			$resultPages = array(1, 2, 3, 4, 5);
-		}else{
-			$resultPages = range($start, $limit);
-		}
-		$smarty->assign('resultPageNumber', $pageNumber);
-		$smarty->assign('resultsPerPage', $numberPerPage);
-		$smarty->assign('resultPages', $resultPages);
+        $smarty->assign('activePage', 'list');
+        $queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
+        $numberPerPage = 20;
+        $pageNumber = 1;
+        $resultPages = array(1, 2, 3, 4, 5);
+        if(isset($path[1])){
+            $pageNumber = intval($path[1]);
+            if(isset($path[2])){ $numberPerPage = intval($path[2]); }
+        }
+        if($queryListing!=false){
+            $numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
+            $resultData = getResults($queryListing, $numberPerPage, $pageNumber);
+        }
+        if($pageNumber+2>$numberOfPages){
+            $limit = $numberOfPages;
+            $start = $pageNumber-(4-($numberOfPages-$pageNumber));
+        }else{
+            $limit = $pageNumber+2;
+            $start = $pageNumber-2;
+        }
+        if($pageNumber<3){
+            $resultPages = array(1, 2, 3, 4, 5);
+        }else{
+            $resultPages = range($start, $limit);
+        }
+        $smarty->assign('resultPageNumber', $pageNumber);
+        $smarty->assign('resultsPerPage', $numberPerPage);
+        $smarty->assign('resultPages', $resultPages);
         $output = 'list.tpl';
         break;
     case 'view':
@@ -616,8 +616,8 @@ switch(strtolower($path[0])){
             $geshi = new GeSHi($data[''], 'php');
             $geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
             $smarty->assign('code', $geshi->parse_code());
-			$newviews = $data['views']+1;
-			$connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
+            $newviews = $data['views']+1;
+            $connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
             $smarty->assign('activePage', 'view');
             $output = 'view.tpl';
         }
