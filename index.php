@@ -228,13 +228,21 @@ function getTimeZoneOptions($active){
     }
     return $data;
 }
-function getResults($queryHandle, $numberToGet, $pageNumber){
+function getResults($queryHandle, $numberPerPage, $pageNumber){
     $outputArray = array();
-    while(count($outputArray)<$numberToGet){
-        $outputArray[count($outputArray)] = $queryHandle->fetch_assoc();
+    $count = 0;
+    $limiter = ($pageNumber-1)*$numberPerPage;
+    while(count($outputArray)<$numberPerPage){
+        if($count>=$limiter){
+            $outputArray[count($outputArray)] = $queryHandle->fetch_assoc();
+        }else{
+            $queryHandle->fetch_assoc();
+        }
+        $count = $count+1;
     }
     return $outputArray;
 }
+
 // GeSHi
 require_once('assets/geshi.php');
 
@@ -430,8 +438,8 @@ switch(strtolower($path[0])){
                 $smarty->assign('email', $_POST['email']);
                 $smarty->assign('passwordError', true);
                 $output = 'register.tpl';
-            }elseif(strlen($_POST['username'])<3){
-                $smarty->assign('registerError', 'Username must be at least 3 characters!');
+            }elseif(strlen($_POST['username'])<3 || strlen($_POST['username']>17)){
+                $smarty->assign('registerError', 'Username must be between 4 and 16 characters!');
                 $smarty->assign('username', $_POST['username']);
                 $smarty->assign('email', $_POST['email']);
                 $smarty->assign('usernameError', true);
@@ -579,6 +587,7 @@ switch(strtolower($path[0])){
         $numberPerPage = 20;
         $pageNumber = 1;
         $resultPages = array(1, 2, 3, 4, 5);
+        // Get the page number and number of results per page.
         if(isset($path[1])){
             $pageNumber = intval($path[1]);
             if(isset($path[2])){ $numberPerPage = intval($path[2]); }
@@ -587,17 +596,20 @@ switch(strtolower($path[0])){
             $numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
             $resultData = getResults($queryListing, $numberPerPage, $pageNumber);
         }
-        if($pageNumber+2>$numberOfPages){
+        if($numberOfPages<5){
+            $limit = $numberOfPages;
+            $start = 1;
+        }elseif($pageNumber+2>$numberOfPages){
             $limit = $numberOfPages;
             $start = $pageNumber-(4-($numberOfPages-$pageNumber));
         }else{
             $limit = $pageNumber+2;
             $start = $pageNumber-2;
         }
-        if($pageNumber<3){
-            $resultPages = array(1, 2, 3, 4, 5);
-        }else{
+        if($numberOfPages!=0){
             $resultPages = range($start, $limit);
+        }else{
+            $resultPages = array(1);
         }
         $smarty->assign('resultPageNumber', $pageNumber);
         $smarty->assign('resultsPerPage', $numberPerPage);
@@ -605,12 +617,24 @@ switch(strtolower($path[0])){
         $output = 'list.tpl';
         break;
     case 'view':
+        $smarty->assign('commentData', array());
         $pubID = addslashes(strtolower($path[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         if($query->num_rows==0 && false){
             $output = '404.tpl';
         }else{
             // $dataToUse gets taken by view.php and turned into the main page.
+            if(isset($_POST['commentField'])){
+                // So someone has commented on a page that does exist. Lets handle it.
+                var_dump($_POST);
+                if(!$_SESSION['loggedIn']){
+                    // If they submitted a comment without being logged in, reject it.
+                    $_SESSION['loginInfo'] = 'You must be logged in to view user profiles!';
+                    header('Location: http://scripts.citizensnpcs.com/login');
+                    exit;
+                }
+                
+            }
             $data = $query->fetch_assoc();
             $smarty->assign('dataToUse', $data);
             $geshi = new GeSHi($data[''], 'php');

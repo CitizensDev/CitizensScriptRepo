@@ -1,4 +1,4 @@
-<div class="well well-large" style="margin-right: auto; margin-left: auto;">
+<div class="well well-large" style="margin-right: auto; margin-left: auto; text-align:center">
         <h2>Search</h2>
         <form id='mainPageSearch' method='post' accept-charset='UTF-8'>
         <div class="input-append">
