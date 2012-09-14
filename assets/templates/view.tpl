@@ -1,10 +1,15 @@
-<div class="span7 well well-small">
-    <legend>{$dataToUse.name}</legend>
+<div class="span8 well well-small">
+    <b>Description: </b>{$dataToUse.description}<br><br>
     {$code}
+    <b style="text-align:right;padding-left:0px;">Edit</b>
 </div>
-<div class="span3 offset1 well well-large">
-    <b>Author: </b>{$dataTouse.author}<br>
-    <b>Created: </b>9/13/2012<br>
+<div class="span3 well well-large">
+    <h4 style="text-align:center;">{$dataToUse.name}</h2><br>
+    <b>Author: </b>{$dataToUse.author}<br>
+    <b>Created: </b>{$dataToUse.timestamp}<br>
+    <b>Views: </b>{$dataToUse.views}<br>
+    <b>Downloads: </b>{$dataToUse.downloads}<br>
+    <b>Likes: </b>{$dataToUse.likes}<br>
 </div><br><br><br><br>
 <div id="commentsZone">
     <legend>Comments</legend>

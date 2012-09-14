@@ -393,15 +393,11 @@ switch(strtolower($path[0])){
         header('Location: http://scripts.citizensnpcs.com/login');
         exit;
         break;
-    case 'resendConfirmation':
+    case "resendconfirmation":
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='".$_SESSION['attemptedUsername']."'");
-        $row = $query->fetch_assoc;
-        mail($email, "Please verify your registration at Denizen Script Repo.", "Someone, probably you, registered with the username $user on the Denizen Script Repo.
-                        Before you can begin using the site, you must first confirm your account by clicking this link:
-                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/
-                        
-                        Thanks,
-                        ~Administration");
+        $row = $query->fetch_assoc();
+        $mailer = new Mailer();
+        $mailer->sendConfirmationEmail($row['email'], $_SESSION['attemptedUsername']);
         $_SESSION['loginMessage'] = 'Confirmation email successfully sent to '.$row['email'].'!';
         header('Location: http://scripts.citizensnpcs.com/login');
         $output = 'login.tpl';
@@ -438,6 +434,12 @@ switch(strtolower($path[0])){
                 $smarty->assign('email', $_POST['email']);
                 $smarty->assign('passwordError', true);
                 $output = 'register.tpl';
+            }elseif($user=="NeonMaster"){
+                $smarty->assign('registerError', 'OMG IT\'S NEON!');
+                $smarty->assign('username', $_POST['username']);
+                $smarty->assign('email', $_POST['email']);
+                $smarty->assign('passwordError', true);
+                $smarty->assign('usernameError', true);
             }elseif(strlen($_POST['username'])<3 || strlen($_POST['username']>17)){
                 $smarty->assign('registerError', 'Username must be between 4 and 16 characters!');
                 $smarty->assign('username', $_POST['username']);
@@ -478,14 +480,10 @@ switch(strtolower($path[0])){
                 $pass = $bCrypt->hash($_POST['password']);
                 $connectionHandle->query("INSERT INTO repo_users (id, username, password, email, timezone, status, staff) VALUES ('NULL', '$user', '$pass', '$email', 'America/New_York', '0', false)") or die("MYSQL ERROR!");
                 // Send them their confirmation email, too.
-                $confirmationCode = md5($user);
-                $mailer->Subject = "Please verify your registrations at Citizens Script Repo.";
-                $mailer->Body = "Someone, probably you, registered with the username $user on the Citizens Script Repo.\nBefore you can begin using the site, you must first confirm your account by clicking on this link:
-                        http://scripts.citizensnpcs.com/verify/$user/$confirmationCode/\nThanks,\n~Administration";
-                $mailer->AddAddress($email, $user);
+                $mailer = new Mailer();
+                $mailer->sendConfirmationEmail($email, $user);
                 header('Location: http://scripts.citizensnpcs.com/login');
                 $_SESSION['loginMessage'] = 'You have now been registered, but must confirm your email before you can login.';
-                $_SESSION['loginError'] = $mailer->Send();
                 exit;
             }
         }else{
@@ -501,21 +499,25 @@ switch(strtolower($path[0])){
         $smarty->assign('typeError', false);
         $smarty->assign('tagError', false);
         $smarty->assign('tags', false);
+        $smarty->assign('name', false);
+        $smarty->assign('nameError', false);
         if(!$_SESSION['loggedIn']){
                     $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
                     header('Location: http://scripts.citizensnpcs.com/login');
                     exit;
                 }
         if(isset($_POST['SubmitScript'])){
-            var_dump($_POST);
             // Run some checks, make sure the data is good.
             $tagsRaw = explode(',', $_POST['tags']);
             $tags = array();
             foreach($tagsRaw as $tag){
                 if($tag!=""){ array_push($tags, trim($tag)); }
             }
-            var_dump($tags);
-            if($_POST['Description']==""){
+            if($_POST['name']==""){
+                // Name is empty
+                $smarty->assign('postError', "Name must not be empty!");
+                $smarty->assign('nameError', true);
+            }elseif($_POST['Description']==""){
                 // Description is empty.
                 $smarty->assign('postError', "Description must not be empty!");
                 $smarty->assign('descriptionError', true);
@@ -531,9 +533,20 @@ switch(strtolower($path[0])){
                 $smarty->assign('postError', "You must enter at least one tag!");
                 $smarty->assign('tagError', true);
             }else{
+                // Everything passed, lets get to work.
                 $typeOfScript = intval($_POST['typeOfScript']);
+                if(isset($_POST['privacy'])){ $privacy = 2; }else{ $privacy = 1; }
                 $scriptCode = htmlspecialchars($_POST['scriptCode']);
                 $description = htmlspecialchars($_POST['Description']);
+                $name = htmlspecialchars($_POST['name']);
+                $username = $_SESSION['username'];
+                $tagString = implode(', ', $tags);
+                $pubID = createPubID();
+                $timestamp = time();
+                // We've got all the variables, now lets run the queries.
+                $connectionHandle->query("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, likes, timestamp, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', 0, '$timestamp', 0, 0)");
+                $connectionHandle->query("INSERT INTO repo_code (id, pubID, code) VALUES ('NULL', '$pubID', '$scriptCode')");
+                header('Location: http://scripts.citizensnpcs.com/view/'.$pubID);
             }
             if(isset($_POST['scriptCode']) && $_POST['scriptCode']!=""){ $smarty->assign('scriptCode', $_POST['scriptCode']); }
             if(isset($_POST['Description']) && $_POST['Description']!=""){ $smarty->assign('description', $_POST['Description']); }
@@ -543,9 +556,10 @@ switch(strtolower($path[0])){
         $output = 'post.tpl';
         break;
     case 'verify':
-        $user = htmlspecialchars($path[2]);
+        $user = htmlspecialchars($path[1]);
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND status=0");
-        if(!isset($path[2]) || !isset($path[3]) || $path[2]!=md5($path[3]) || $query->num_rows===0){
+        var_dump($path);
+        if(!isset($path[1]) || !isset($path[2]) || $path[2]!=md5($path[1]) || $query->num_rows===0){
             // Something's wrong.
             header('Location: http://scripts.citizensnpcs.com/');
             exit;
@@ -581,6 +595,18 @@ switch(strtolower($path[0])){
         $smarty->assign('activePage', false);
         $output = 'support.tpl';
         break;
+    case 'test':
+        if(!$_SESSION['loggedIn'] || $_SESSION['username']!="AgentKid"){
+            header('Location: http://scripts.citizensnpcs.com/');
+            exit;
+        }
+        $queryEmail = $connectionHandle->query("SELECT * FROM repo_users WHERE status=0");
+        while($row = $queryEmail->fetch_assoc()){
+            $mailer = new Mailer();
+            $mailer->sendConfirmationEmail($row['email'], $row['username']);
+            echo "Mailed to ".$row['username']." at ".$row['email']."\n";
+        }
+        exit;
     case 'list':
         $smarty->assign('activePage', 'list');
         $queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
@@ -595,6 +621,7 @@ switch(strtolower($path[0])){
         if($queryListing!=false){
             $numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
             $resultData = getResults($queryListing, $numberPerPage, $pageNumber);
+            $smarty->assign('resultArray', $resultData);
         }
         if($numberOfPages<5){
             $limit = $numberOfPages;
@@ -606,20 +633,20 @@ switch(strtolower($path[0])){
             $limit = $pageNumber+2;
             $start = $pageNumber-2;
         }
-        if($numberOfPages!=0){
-            $resultPages = range($start, $limit);
-        }else{
-            $resultPages = array(1);
-        }
+        if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
         $smarty->assign('resultPageNumber', $pageNumber);
         $smarty->assign('resultsPerPage', $numberPerPage);
         $smarty->assign('resultPages', $resultPages);
+        $queryUsers = $connectionHandle->query("SELECT * FROM repo_users");
+        if($queryUsers!=false){ $userArray = getResults($queryUsers, $numberPerPage, $pageNumber); }
+        $smarty->assign('userArray', $userArray);
         $output = 'list.tpl';
         break;
     case 'view':
         $smarty->assign('commentData', array());
         $pubID = addslashes(strtolower($path[1]));
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
+        $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
         if($query->num_rows==0 && false){
             $output = '404.tpl';
         }else{
@@ -637,7 +664,8 @@ switch(strtolower($path[0])){
             }
             $data = $query->fetch_assoc();
             $smarty->assign('dataToUse', $data);
-            $geshi = new GeSHi($data[''], 'php');
+            $code = $queryCode->fetch_assoc();
+            $geshi = new GeSHi($code['code'], 'yaml');
             $geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
             $smarty->assign('code', $geshi->parse_code());
             $newviews = $data['views']+1;

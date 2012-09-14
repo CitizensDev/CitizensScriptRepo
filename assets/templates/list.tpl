@@ -1,17 +1,16 @@
-THIS IS A LIST! RAWR!<br>
-
-The links should look like<br> http://scripts.citizensnpcs.com/list/{$resultPageNumber}/{$resultsPerPage}
-
-<!-- This is broken. <div class="container-fluid">
-    <div clss="row-fluid">
-        <div class="span10">
-            THIS IS THE BODY :D
+        <div style="background-color:white" class="span8 well well-small">
+            {foreach $resultArray as $result}
+                {if $result}{$result.name}<br>{/if}
+            {/foreach}
         </div>
-        <div class="span2">
-            Sidebar stuff
+        <div style="background-color:white" class="span3 well well-small">
+            <h4 style="text-align:center;">Users</h4>
+            <table class="table table-hover">
+            {foreach $userArray as $user}{if $user}<tr style="cursor:pointer" onclick='document.location.href="http://scripts.citizensnpcs.com/user/{$user.username}"'><td>
+                <a href="http://scripts.citizensnpcs.com/user/{$user.username}">{$user.username}</a></td></tr>
+            {/if}{/foreach}
+            </table>
         </div>
-    </div>
-</div> -->
 
 <!-- Navigation -->
 <div id="navigation" style="text-align:center;">

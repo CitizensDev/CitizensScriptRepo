@@ -28,15 +28,15 @@
                       <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list">List</a></li>
                       <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post">Post</a></li>
                       <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                          <li><a href="#">Action</a></li>
-                          <li><a href="#">Another action</a></li>
-                          <li><a href="#">Something else here</a></li>
+                          <li><a href="#">Someone should</a></li>
+                          <li><a href="#">tell aufdemrand</a></li>
+                          <li><a href="#">to come up with</a></li>
                           <li class="divider"></li>
-                          <li class="nav-header">Nav header</li>
-                          <li><a href="#">Separated link</a></li>
-                          <li><a href="#">One more separated link</a></li>
+                          <li class="nav-header">something to</li>
+                          <li><a href="#">go here, or else</a></li>
+                          <li><a href="#">this will stay</a></li>
                         </ul>
                       </li>{if $admin}
                       <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin{if $adminNeeded}(!){/if}</a></li>{/if}
