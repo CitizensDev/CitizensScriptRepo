@@ -1,9 +1,11 @@
-        <div style="background-color:white" class="span8 well well-small">
+<div style="background-color:white" class="span8 well well-small">
             <h3 style="text-align:center;">Scripts</h3>
             <table class="table table-hover">
             {foreach $resultArray as $result}
                 {if $result}<tr style="cursor:pointer" onclick='document.location.href="http://scripts.citizensnpcs.com/view/{$result.pubID}"'><td>
-                        <a href="http://scripts.citizensnpcs.com/view/{$result.pubID}">{$result.name}</a>
+                        <span class="pull-left"><a href="http://scripts.citizensnpcs.com/view/{$result.pubID}">{$result.name}</a></span>  <span class="pull-right""><i class="icon-eye-open"></i> {$result.views}</span>
+                        <br><span class="pull-right"><i class="icon-thumbs-up"></i> {if $result.author=="AgentKid"} &infin;{else}{$result.likes}{/if}</span>
+                        <br><small>Author: {$result.author}</small><span class="pull-right"><i class="icon-download"></i> {$result.downloads}</span>
                 </td></tr>{/if}
             {/foreach}
             </table>
@@ -16,7 +18,7 @@
             {/if}{/foreach}
             </table>
         </div>
-
+            <div id="keepThePaginationProperlyLocated" class="span10"><br></div>
 <!-- Navigation -->
 <div id="navigation" style="text-align:center;">
     Results per page: {if $resultsPerPage!=20}<a href="http://scripts.citizensnpcs.com/list/{$resultPageNumber}/20">{/if}20{if $resultsPerPage!=20}</a>{/if}, {if $resultsPerPage!=50}<a  href="http://scripts.citizensnpcs.com/list/{$resultPageNumber}/50">{/if}50{if $resultsPerPage!=50}</a>{/if}, {if $resultsPerPage!=100}<a  href="http://scripts.citizensnpcs.com/list/{$resultPageNumber}/100">{/if}100{if $resultsPerPage!=100}</a>{/if}, {if $resultsPerPage!=200}<a  href="http://scripts.citizensnpcs.com/list/{$resultPageNumber}/200">{/if}200{if $resultsPerPage!=200}</a>{/if}

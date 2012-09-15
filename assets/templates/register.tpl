@@ -9,7 +9,7 @@
         {if $usernameError}<div class="control-group error">{/if}<label for='username' >Username:</label>
         <input class="control-label" type='text' {if $username} value="{$username}" {/if}name='username' id='username' maxlength="50" />{if $usernameError}</div>{/if}
         {if $emailError}<div class="control-group error">{/if}<label for='email' >Email Address:</label>
-        <input class="control-label" type='text' {if $email} value="{$email}" {/if}name='email' id='email' maxlength="50" />{if $emailError}</div>{/if}
+        <input class="control-label" type='email' {if $email} value="{$email}" {/if}name='email' id='email' maxlength="50" />{if $emailError}</div>{/if}
         {if $passwordError}<div class="control-group error">{/if}<label for='password' >Password:</label>
         <input class="control-label" type='password' name='password' id='password' maxlength="50" /><br />
         <label for='passwordConfirm' >Repeat Password:</label>

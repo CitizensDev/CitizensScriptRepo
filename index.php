@@ -198,7 +198,7 @@ if(isset($_POST['q2'])){
     exit;
 }
 function getCurrentTimeZone($username){
-    $username = htmlspecialchars($username);
+    $username = $GLOBALS['connectionHandle']->real_escape_string($username);
     $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
     if($query!=false){
         $row = $query->fetch_assoc();
@@ -258,48 +258,19 @@ $smarty->assign('admin', $_SESSION['admin']);
 $smarty->assign('adminNeeded', false);
 if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
 
-// Script handler class
-class ScriptHandler{
-    public $connectionHandle;
-    protected $id;
-    public $dataArray;
-    function __construct($id){
-        $this->connectionHandle = $GLOBALS['connectionHandle'];
-        $id = int($id);
-        $this->id = $id;
-        $query = $this->connectionHandle->query("SELECT * FROM repo_entries WHERE id='$id");
-        if($query===false || $query->num_rows!==1){
-            return false;
-        }else{
-            $this->dataArray = $query->fetch_assoc;
-        }
-    }
-    function getAuthor(){
-        return $this->dataArray['author'];
-    }
-    function getLikes(){
-        return $this->dataArray['likes'];
-    }
-    function flag($username){
-        $id = $this->id;
-        $username = htmlspecialchars($username);
-        $this->connectionHandle->query("INSERT INTO repo_flags (id, author, type, scriptID) VALUES ('NULL', '$username', '1', '$id')");
-    }
-}
-
 // This is just on git.
 include('password.php');
 $connectionHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
 include('assets/bcrypt.php');
 function isValidLogin($user, $password){
     $bCrypt = new Bcrypt(12);
-    $username = htmlspecialchars($user);
+    $username = $GLOBALS['connectionHandle']->real_escape_string($user);
     $result = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
     $row = $result->fetch_assoc();
     if($bCrypt->verify($password, $row['password'])){ return true; }else{ return false; }
 }
 function isActiveUser($user){
-    $username = htmlspecialchars($user);
+    $username = $GLOBALS['connectionHandle']->real_escape_string($user);
     $result = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
     $row = $result->fetch_assoc();
     if($row['status']==1){ return true; }else{ return false; }
@@ -345,7 +316,7 @@ switch(strtolower($path[0])){
             }elseif(!isActiveUser($_POST['username'])){
                 $smarty->assign('username', $_POST['username']);
                 $smarty->assign('loginError', 'You must activate your email before you can log in! <a href="http://scripts.citizensnpcs.com/resendConfirmation">Resend confirmation email.</a>');
-                $_SESSION['attemptedUsername'] = htmlspecialchars($_POST['username']);
+                $_SESSION['attemptedUsername'] = $connectionHandle->real_escape_string($_POST['username']);
                 $output = 'login.tpl';
             }else{
                 // Login
@@ -379,7 +350,7 @@ switch(strtolower($path[0])){
             // Handle the update.
             if($_POST['timezone']!=$currentTimezone){
                 // They updated the timezone. Make the changes.
-                $newTimezone = htmlspecialchars($_POST['timezone']);
+                $newTimezone = $connectionHandle->real_escape_string($_POST['timezone']);
                 $connectionHandle->query("UPDATE repo_users SET timezone='$newTimezone' WHERE username='".$_SESSION['username']."'");
                 $currentTimezone = $newTimezone;
             }
@@ -418,9 +389,9 @@ switch(strtolower($path[0])){
         $smarty->assign('ayahError', false);
         $smarty->assign('ayah', $ayah->getPublisherHTML());
         if(isset($_POST['registerForm'])){
-            $email = htmlentities($_POST['email']);
+            $email = $connectionHandle->real_escape_string($_POST['email']);
             $emailQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE email='$email'");
-            $user = htmlentities($_POST['username']);
+            $user = $connectionHandle->real_escape_string($_POST['username']);
             $userQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE user='$user'");
             // Checks
             if(strlen($_POST['password'])<5){
@@ -539,9 +510,9 @@ switch(strtolower($path[0])){
                 // Everything passed, lets get to work.
                 $typeOfScript = intval($_POST['typeOfScript']);
                 if(isset($_POST['privacy'])){ $privacy = 2; }else{ $privacy = 1; }
-                $scriptCode = htmlspecialchars($_POST['scriptCode']);
-                $description = htmlspecialchars($_POST['Description']);
-                $name = htmlspecialchars($_POST['name']);
+                $scriptCode = $connectionHandle->real_escape_string($_POST['scriptCode']);
+                $description = $connectionHandle->real_escape_string($_POST['Description']);
+                $name = $connectionHandle->real_escape_string($_POST['name']);
                 $username = $_SESSION['username'];
                 $tagString = implode(', ', $tags);
                 $pubID = createPubID();
@@ -559,7 +530,7 @@ switch(strtolower($path[0])){
         $output = 'post.tpl';
         break;
     case 'verify':
-        $user = htmlspecialchars($path[1]);
+        $user = $connectionHandle->real_escape_string($path[1]);
         $query = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$user' AND status=0");
         var_dump($path);
         if(!isset($path[1]) || !isset($path[2]) || $path[2]!=md5($path[1]) || $query->num_rows===0){
@@ -578,7 +549,7 @@ switch(strtolower($path[0])){
         break;
     case 'search':
         $smarty->assign('activePage', false);
-        $query = htmlspecialchars(urldecode($path[1]));
+        $query = $connectionHandle->real_escape_string(urldecode($path[1]));
         $searchSettings = array($path[2], $path[3], $path[4], $path[5]);
         $smarty->assign('searchQuery', $query);
         $smarty->assign('searchSettings', $searchSettings);
@@ -646,8 +617,10 @@ switch(strtolower($path[0])){
         $output = 'list.tpl';
         break;
     case 'view':
-        $smarty->assign('commentData', array());
-        $pubID = addslashes(strtolower($path[1]));
+        $pubID = $connectionHandle->real_escape_string(strtolower($path[1]));
+        $smarty->assign('commentField', false);
+        $smarty->assign('commentFailure', false);
+        $smarty->assign('commentSuccess', false);
         $query = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
         if($query->num_rows==0 && false){
@@ -656,14 +629,27 @@ switch(strtolower($path[0])){
             // $dataToUse gets taken by view.php and turned into the main page.
             if(isset($_POST['commentField'])){
                 // So someone has commented on a page that does exist. Lets handle it.
-                var_dump($_POST);
                 if(!$_SESSION['loggedIn']){
                     // If they submitted a comment without being logged in, reject it.
                     $_SESSION['loginInfo'] = 'You must be logged in to view user profiles!';
                     header('Location: http://scripts.citizensnpcs.com/login');
                     exit;
                 }
-                
+                $commentField = $connectionHandle->real_escape_string($_POST['commentField']);
+                if(strlen($commentField)<5){
+                    $smarty->assign('commentFailure', 'Please don\'t spam. Comments must be longer than 5 characters.');
+                    $smarty->assign('commentField', $commentField);
+                }else{
+                    // Allow the comment!
+                    $user = $_SESSION['username'];
+                    $connectionHandle->query("INSERT INTO repo_comments (id, entryID, author, timestamp, content) VALUES ('NULL', '$pubID', '$user', now(), '$commentField')");
+                    $smarty->assign('commentSuccess', 'Your comment has been posted.');
+                }
+            }
+            $queryComments = $connectionHandle->query("SELECT * FROM repo_comments WHERE entryID='$pubID'");
+            $commentData = array();
+            while($row = $queryComments->fetch_assoc()){
+                $commentData[count($commentData)] = $row;
             }
             $data = $query->fetch_assoc();
             $smarty->assign('dataToUse', $data);
@@ -674,6 +660,7 @@ switch(strtolower($path[0])){
             $newviews = $data['views']+1;
             $connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
             $smarty->assign('activePage', 'view');
+            $smarty->assign('commentData', $commentData);
             $output = 'view.tpl';
         }
         break;
