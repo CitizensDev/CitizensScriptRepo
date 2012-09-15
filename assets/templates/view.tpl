@@ -1,7 +1,7 @@
 <div class="span8 well well-small">
     <b>Description: </b>{$dataToUse.description}<br><br>
     {$code}
-    <b style="text-align:right;padding-left:0px;">Edit</b>
+    {if $dataToUse.author==$username}<b style="text-align:right;padding-left:0px;">Edit</b>{/if}
 </div>
 <div class="span3 well well-large">
     <h4 style="text-align:center;">{$dataToUse.name}</h2><br>

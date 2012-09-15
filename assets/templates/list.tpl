@@ -1,7 +1,12 @@
         <div style="background-color:white" class="span8 well well-small">
+            <h3 style="text-align:center;">Scripts</h3>
+            <table class="table table-hover">
             {foreach $resultArray as $result}
-                {if $result}{$result.name}<br>{/if}
+                {if $result}<tr style="cursor:pointer" onclick='document.location.href="http://scripts.citizensnpcs.com/view/{$result.pubID}"'><td>
+                        <a href="http://scripts.citizensnpcs.com/view/{$result.pubID}">{$result.name}</a>
+                </td></tr>{/if}
             {/foreach}
+            </table>
         </div>
         <div style="background-color:white" class="span3 well well-small">
             <h4 style="text-align:center;">Users</h4>

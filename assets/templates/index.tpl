@@ -75,7 +75,7 @@
             </div>
             {include file="$output"}
             <footer class="footer">
-                <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="http://scripts.citizensnpcs.com/support">Support</a></div>
+                <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="http://scripts.citizensnpcs.com/support">Support</a> - <a href="http://scripts.citizensnpcs.com/credits">Credits</a></div>
             </footer>
         </div>
     </body>

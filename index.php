@@ -310,6 +310,9 @@ $bCrypt = new Bcrypt(12);
 //if($query2->num_rows>0){ $smarty->assign('adminNeeded', true); }
 
 switch(strtolower($path[0])){
+    case 'credits':
+        $output = 'credits.tpl';
+        break;
     case 'login':
         $smarty->assign('activePage', 'login');
         $smarty->assign('loginError', false);
@@ -665,7 +668,7 @@ switch(strtolower($path[0])){
             $data = $query->fetch_assoc();
             $smarty->assign('dataToUse', $data);
             $code = $queryCode->fetch_assoc();
-            $geshi = new GeSHi($code['code'], 'yaml');
+            $geshi = new GeSHi(htmlspecialchars_decode($code['code']), 'yaml');
             $geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
             $smarty->assign('code', $geshi->parse_code());
             $newviews = $data['views']+1;
