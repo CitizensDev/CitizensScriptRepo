@@ -3497,7 +3497,7 @@ class GeSHi {
                 //Get the appropriate style ...
                 //Checking for unset styles is done by the style cache builder ...
                 if (!$this->use_classes) {
-                    $attributes = ' style="' . $this->language_data['STYLES']['NUMBERS'][$id] . '"';
+                    $attributes = " style='{$this->language_data['STYLES']['NUMBERS'][$id]}'"';
                 } else {
                     $attributes = ' class="nu'.$id.'"';
                 }
