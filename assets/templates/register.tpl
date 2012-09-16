@@ -14,7 +14,7 @@
         <input class="control-label" type='password' name='password' id='password' maxlength="50" /><br />
         <label for='passwordConfirm' >Repeat Password:</label>
         <input class="control-label" type='password' name='passwordConfirm' id='passwordConfirm' maxlength="50" /><br />{if $passwordError}</div>{/if}
-        {if $ayahError}<div class="control-group error">{/if}<label>Are You A Human?:</label>{if $ayahError}</div>{/if}
+        {if $ayahError}<div class="control-group error">{/if}<label>Are You Human? Or Are You Dancer?:</label>{if $ayahError}</div>{/if}
         {$ayah}
         <br /><br /><p><small>All fields are required</small></p>
         <input class="btn btn-primary" type='Submit' name='Submit' value=' GO ' />
