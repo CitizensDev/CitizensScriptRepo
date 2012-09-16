@@ -7,9 +7,26 @@
         <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap.min.css" type="text/css" media="screen">
         <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap-responsive.min.css" type="text/css" media="screen">
         <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
         <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/jquery.timeago.js"></script>
+        <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/tiny_mce/tiny_mce.js"></script>
+        <script>
+            jQuery(document).ready(function() {
+                jQuery("abbr.timeago").timeago();
+            });
+            $(document).ready(function () {
+                if ($("[rel=tooltip]").length) {
+                    $("[rel=tooltip]").tooltip();
+                }
+            });
+            tinyMCE.init({
+                theme : "advanced",
+                mode : "exact",
+                elements: "Description"
+            });
+            $("#myModal").modal() 
+        </script>
     </head>
     <body class="preview" data-spy="scroll" data-target=".subnav" data-offset="50">
         <section id="navbar">
@@ -24,9 +41,9 @@
                   <a class="brand" href="http://scripts.citizensnpcs.com/">Citizens Script Repo</a>
                   <div class="nav-collapse">
                     <ul class="nav">
-                      <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/">Home</a></li>
-                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list">List</a></li>
-                      <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post">Post</a></li>
+                      <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/"><i class="icon-home"></i> Home</a></li>
+                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list"><i class="icon-list"></i> List</a></li>
+                      <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post"><i class="icon-pencil"></i> Post</a></li>
                       <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
                         <ul class="dropdown-menu">
@@ -39,7 +56,7 @@
                           <li><a href="#">this will stay</a></li>
                         </ul>
                       </li>{if $admin}
-                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin{if $adminNeeded}(!){/if}</a></li>{/if}
+                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin {if $adminNeeded}(!){/if}</a></li>{/if}
                     </ul>
                     <form class="navbar-search pull-left" id="searchQuery" method="post" action="http://scripts.citizensnpcs.com/search">
                       <input type="text" class="search-query" name='q' placeholder="Search">
@@ -47,11 +64,11 @@
                     <ul class="nav pull-right">
                       {if $loggedIn}
                       <li class="dropdown">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown">{$username} <b class="caret"></b></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> {$username} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                           <li><a href="http://scripts.citizensnpcs.com/user/{$username}">Your Profile</a></li>
                           <li><a href="http://scripts.citizensnpcs.com/settings">Settings</a></li>
-                          <li><a href="#">Something else here</a></li>
+                          <li><a href="http://scripts.citizensnpcs.com/myscripts">Your scripts</a></li>
                           <li class="divider"></li>
                           <li><a href="http://scripts.citizensnpcs.com/logout">Logout</a></li>
                         </ul>

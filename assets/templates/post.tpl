@@ -7,7 +7,7 @@
             {if $nameError}<div class="control-group error">{/if}<label for='name' >Name:</label>
             <input class="input-large" name='name' id='name' type="text"{if $name} value="{$name}"{/if} /><br>{if $nameError}</div>{/if}
             {if $descriptionError}<div class="control-group error">{/if}<label for='Description' >Description:</label>
-            <textarea id='Description' name='Description' rows="6" class="span7">{$description}</textarea>{if $descriptionError}</div>{/if}
+            <textarea id='Description' name='Description' rows="15" class="span7">{nl2br($description)}</textarea>{if $descriptionError}</div>{/if}
             {if $scriptError}<div class="control-group error">{/if}<label for='scriptCode' >Script Code:</label>
             <textarea id='scriptCode' name='scriptCode' rows="10" class="span7">{$scriptCode}</textarea>{if $scriptError}</div>{/if}
             {if $tagError}<div class="control-group error">{/if}<label for='tags' >Tags:</label>

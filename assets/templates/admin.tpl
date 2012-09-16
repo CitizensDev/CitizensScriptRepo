@@ -1,1 +1,2 @@
-Adminize!
+Adminize!<br><br>
+<form id='LOL' method='post'><input type='hidden' id='LOL2' name='LOL2' value='LOL2' /><button type='submit' id='LOL' name='LOL' value='Destroy the entire world' class="btn btn-danger" />Destroy the entire world</button></form>
