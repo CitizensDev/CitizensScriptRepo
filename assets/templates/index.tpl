@@ -43,7 +43,7 @@
                       <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/"><i class="icon-home"></i> Home</a></li>
                       <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list"><i class="icon-list"></i> List</a></li>
                       <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post"><i class="icon-pencil"></i> Post</a></li>
-                      <!-- Hmmmm, what to put here.... <li class="dropdown">
+                      <!-- Hmmmm, what to put here....<li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                           <li><a href="#">Someone should</a></li>

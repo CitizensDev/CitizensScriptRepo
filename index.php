@@ -17,12 +17,12 @@ if(isset($_SESSION['lol']) && !in_array('logout', $path)){
     exit;
 }
 
-
-// Mailer
 require_once('assets/phpmailer/mail.php');
-
-// AreYouAHuman
 require_once('assets/ayah.php');
+require_once('assets/geshi.php');
+require_once('assets/Smarty/Smarty.class.php');
+require_once('password.php');
+require_once('assets/bcrypt.php');
 
 function alphaID($in, $to_num = false, $pad_up = false){
 /*
@@ -168,42 +168,6 @@ function createPubID(){
         if($query->num_rows==0){ return $outputID; }
     }
 }
-
-// Handle search queries in the string
-if(isset($_POST['q'])){
-    $query = str_replace(array("%20", " "), "+", $_POST['q']);
-    header('Location: http://scripts.citizensnpcs.com/search/'.$query.'/1/1/1/1');
-    exit;
-}
-if(isset($_POST['q2'])){
-    $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
-    if(isset($_POST['1'])){
-        // Users
-        $query = $query."/1";
-    }else{
-        $query = $query."/0";
-    }
-    if(isset($_POST['2'])){
-        // Code
-        $query = $query."/1";
-    }else{
-        $query = $query."/0";
-    }
-    if(isset($_POST['3'])){
-        // Tags
-        $query = $query."/1";
-    }else{
-        $query = $query."/0";
-    }
-    if(isset($_POST['4'])){
-        // Descriptions
-        $query = $query."/1";
-    }else{
-        $query = $query."/0";
-    }
-    header('Location: http://scripts.citizensnpcs.com/search/'.$query);
-    exit;
-}
 function getCurrentTimeZone($username){
     $username = $GLOBALS['connectionHandle']->real_escape_string($username);
     $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
@@ -249,26 +213,6 @@ function getResults($queryHandle, $numberPerPage, $pageNumber){
     }
     return $outputArray;
 }
-
-// GeSHi
-require_once('assets/geshi.php');
-
-// Smarty
-include('assets/Smarty/Smarty.class.php');
-$smarty = new Smarty;
-$smarty->setTemplateDir('/usr/share/nginx/www/scripts/assets/templates');
-$smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c');
-$smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
-$smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
-$smarty->assign('loggedIn', $_SESSION['loggedIn']);
-$smarty->assign('admin', $_SESSION['admin']);
-$smarty->assign('adminNeeded', false);
-if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
-
-// This is just on git.
-include('password.php');
-$connectionHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
-include('assets/bcrypt.php');
 function isValidLogin($user, $password){
     $bCrypt = new Bcrypt(12);
     $username = $GLOBALS['connectionHandle']->real_escape_string($user);
@@ -282,6 +226,70 @@ function isActiveUser($user){
     $row = $result->fetch_assoc();
     if($row['status']==1){ return true; }else{ return false; }
 }
+
+
+class ScriptRepo{
+    public $mainSite = 'http://scripts.citizensnpcs.com/';
+    public function loginUser($username, $password){
+        if(false){
+            
+        }else{
+            
+        }
+    }
+    private function redirect($newPage){
+        header("Location: $mainSite$newPage");
+        exit;
+    }
+}
+
+// Handle search queries in the string
+if(isset($_POST['q'])){
+    $query = str_replace(array("%20", " "), "+", $_POST['q']);
+    header('Location: http://scripts.citizensnpcs.com/search/'.$query.'/1/1/1/1');
+    exit;
+}
+if(isset($_POST['q2'])){
+    $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
+    if(isset($_POST['1'])){
+        // Users
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['2'])){
+        // Code
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['3'])){
+        // Tags
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    if(isset($_POST['4'])){
+        // Descriptions
+        $query = $query."/1";
+    }else{
+        $query = $query."/0";
+    }
+    header('Location: http://scripts.citizensnpcs.com/search/'.$query);
+    exit;
+}
+
+$smarty = new Smarty;
+$smarty->setTemplateDir('/usr/share/nginx/www/scripts/assets/templates');
+$smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c');
+$smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
+$smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
+$smarty->assign('loggedIn', $_SESSION['loggedIn']);
+$smarty->assign('admin', $_SESSION['admin']);
+$smarty->assign('adminNeeded', false);
+if($_SESSION['loggedIn']){ $smarty->assign('username', $_SESSION['username']); }
+
+$connectionHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
 $bCrypt = new Bcrypt(12);
 
 $query2 = $connectionHandle->query("SELECT * FROM repo_flags");
