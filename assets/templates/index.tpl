@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap.min.css" type="text/css" media="screen">
-        <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap-responsive.min.css" type="text/css" media="screen">
         <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
         <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/bootstrap.min.js"></script>
@@ -44,7 +43,7 @@
                       <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/"><i class="icon-home"></i> Home</a></li>
                       <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list"><i class="icon-list"></i> List</a></li>
                       <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post"><i class="icon-pencil"></i> Post</a></li>
-                      <li class="dropdown">
+                      <!-- Hmmmm, what to put here.... <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                           <li><a href="#">Someone should</a></li>
@@ -54,8 +53,8 @@
                           <li class="nav-header">something to</li>
                           <li><a href="#">go here, or else</a></li>
                           <li><a href="#">this will stay</a></li>
-                        </ul>
-                      </li>{if $admin}
+                        </ul> 
+                      </li>-->{if $admin}
                       <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin {if $adminNeeded}(!){/if}</a></li>{/if}
                     </ul>
                     <form class="navbar-search pull-left" id="searchQuery" method="post" action="http://scripts.citizensnpcs.com/search">

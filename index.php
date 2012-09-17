@@ -293,11 +293,15 @@ switch(strtolower($path[0])){
         break;
     case 'download':
         $pubID = $connectionHandle->real_escape_string(strtolower($path[1]));
-        $queryView = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
+        $queryView = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         if($queryView->num_rows==0){
             $output = '404.tpl';
         }else{
             $row = $queryView->fetch_assoc();
+            $newCount = $row['downloads']+1;
+            $connectionHandle->query("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
+            $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
+            $rowCode = $queryCode->fetch_assoc();
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename=script.yml');
@@ -306,11 +310,24 @@ switch(strtolower($path[0])){
             header('Cache-Control: must-revalidate');
             header('Pragma: public');
             header('Content-Type: application/octet-stream');
-            echo $row['code'];
+            echo $rowCode['code'];
             exit;
         }
         break;
     case 'raw':
+        $pubID = $connectionHandle->real_escape_string(strtolower($path[1]));
+        $queryView = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
+        if($queryView->num_rows==0){
+            $output = '404.tpl';
+        }else{
+            $row = $queryView->fetch_assoc();
+            $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
+            $rowCode = $queryCode->fetch_assoc();
+            $newCount = $row['downloads']+1;
+            $connectionHandle->query("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
+            echo "<html><body><pre>".$rowCode['code']."</pre></body></html";
+            exit;
+        }
         break;
     case 'login':
         $smarty->assign('activePage', 'login');
@@ -543,7 +560,7 @@ switch(strtolower($path[0])){
                 $pubID = createPubID();
                 $timestamp = time();
                 // We've got all the variables, now lets run the queries.
-                $connectionHandle->query("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', '$timestamp', 0, 0)");
+                $connectionHandle->query("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', '$timestamp', $timestamp, 0, 0)");
                 $connectionHandle->query("INSERT INTO repo_code (id, pubID, code) VALUES ('NULL', '$pubID', '$scriptCode')");
                 header('Location: http://scripts.citizensnpcs.com/view/'.$pubID);
                 exit;
@@ -658,7 +675,7 @@ switch(strtolower($path[0])){
                 $tagString = implode(', ', $tags);
                 $timestamp = time();
                 // We've got all the variables, now lets run the queries.
-                $connectionHandle->query("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', privacy='$privacy', scriptType='$typeOfScript', timestamp='$timestamp' WHERE pubID='$pubID'");
+                $connectionHandle->query("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', privacy='$privacy', scriptType='$typeOfScript', edited='$timestamp' WHERE pubID='$pubID'");
                 $connectionHandle->query("UPDATE repo_code SET code='$scriptCode' WHERE pubID='$pubID'");
                 header('Location: http://scripts.citizensnpcs.com/view/'.$pubID);
                 exit;
@@ -697,10 +714,55 @@ switch(strtolower($path[0])){
         break;
     case 'search':
         $smarty->assign('activePage', false);
-        $query = $connectionHandle->real_escape_string(urldecode($path[1]));
-        $searchSettings = array($path[2], $path[3], $path[4], $path[5]);
-        $smarty->assign('searchQuery', $query);
-        $smarty->assign('searchSettings', $searchSettings);
+        $searchTerm = $connectionHandle->real_escape_string(urldecode($path[1]));
+        /*$searchSettings = array($path[2], $path[3], $path[4], $path[5]);
+        switch(true){
+            case $searchSettings=array(0, 0, 0, 0):
+                $query = "SELECT * FROM repo_entries WHERE MATCH('name') AGAINST ('$searchTerm')";
+            case $searchSettings=array(1, 0, 0, 0);
+                $query = "SELECT * FROM repo_entries WHERE MATCH('name') AGAINST ('$searchTerm')";
+            case $searchSettings=array()
+        }*/
+        $smarty->assign('activePage', 'list');
+        $queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
+        $queryLikes = $connectionHandle->query("SELECT * FROM repo_likes");
+        $likesArray = array();
+        while($row = $queryLikes->fetch_assoc()){
+            if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
+            $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
+        }
+        $smarty->assign('likesArray', $likesArray);
+        $numberPerPage = 20;
+        $pageNumber = 1;
+        $resultPages = array(1, 2, 3, 4, 5);
+        // Get the page number and number of results per page.
+        if(isset($path[5])){
+            $pageNumber = intval($path[5]);
+            if(isset($path[6])){ $numberPerPage = intval($path[6]); }
+        }
+        $query = "SELECT * FROM repo_entries WHERE MATCH('name', 'description', 'tags') AGAINST ('$searchTerm')";
+        $querySearch = $connectionHandle->query($query);
+        if($querySearch!=false){
+            $numberOfPages = ceil($querySearch->num_rows/$numberPerPage);
+            $resultData = getResults($querySearch, $numberPerPage, $pageNumber);
+            $smarty->assign('resultArray', $resultData);
+        }else{
+            $numberOfPages = 0;
+        }
+        if($numberOfPages<5){
+            $limit = $numberOfPages;
+            $start = 1;
+        }elseif($pageNumber+2>$numberOfPages){
+            $limit = $numberOfPages;
+            $start = $pageNumber-(4-($numberOfPages-$pageNumber));
+        }else{
+            $limit = $pageNumber+2;
+            $start = $pageNumber-2;
+        }
+        if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
+        $smarty->assign('resultPageNumber', $pageNumber);
+        $smarty->assign('resultsPerPage', $numberPerPage);
+        $smarty->assign('resultPages', $resultPages);
         $output = 'result.tpl';
         break;
     case 'admin':
@@ -821,10 +883,11 @@ switch(strtolower($path[0])){
             $data = $query->fetch_assoc();
             $smarty->assign('dataToUse', $data);
             $smarty->assign('dateCreated', date('Y-m-d\TH:i:sO', $data['timestamp']));
+            $smarty->assign('dateEdited', date('Y-m-d\TH:i:sO', $data['edited']));
             $code = $queryCode->fetch_assoc();
-            $geshi = new GeSHi(htmlspecialchars_decode($code['code']), 'yaml');
-            $geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
-            $smarty->assign('code', $geshi->parse_code());
+            #$geshi = new GeSHi(htmlspecialchars_decode($code['code']), 'yaml');
+            #$geshi->enable_line_numbers(GESHI_FANCY_LINE_NUMBERS, 5);
+            $smarty->assign('code', str_replace('<', '&lt;', $code['code']));
             $newviews = $data['views']+1;
             $connectionHandle->query("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
             $smarty->assign('activePage', 'view');
@@ -837,6 +900,15 @@ switch(strtolower($path[0])){
             $_SESSION['loginInfo'] = 'You must be logged in to view user profiles!';
             header('Location: http://scripts.citizensnpcs.com/login');
             exit;
+        }
+        $userToLookup = $connectionHandle->real_escape_string($path[1]);
+        $userQuery = $connectionHandle->query("SELECT * FROM repo_users WHERE username='$userToLookup'");
+        if($userQuery->num_rows!=1){
+            // Bad query
+            $output = '404.tpl';
+        }else{
+            $smarty->assign('usernameForPage', $userToLookup);
+            $output = 'userpage.tpl';
         }
         break;
     case 'recover':
@@ -866,7 +938,7 @@ switch(strtolower($path[0])){
         }
         if(!$_SESSION['loggedIn']){
             // If they submitted a comment without being logged in, reject it.
-            $_SESSION['loginInfo'] = 'You must be logged in to flag scripts!';
+            $_SESSION['loginInfo'] = 'You must be logged in to do that!';
             header('Location: http://scripts.citizensnpcs.com/login');
             exit;
         }
@@ -888,7 +960,7 @@ switch(strtolower($path[0])){
                 $queryDelete = $connectionHandle->query("SELECT * FROM repo_entries WHERE pubID='$pubID'");
                 if($queryDelete->num_rows!=0){
                     $row = $queryDelete->fetch_assoc();
-                    $connectionHandle->query("INSERT INTO repo_entries_deleted (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, downloads, views) VALUES ('NULL', '$pubID', '".$row['author']."', '".$row['name']."', '".$row['description']."', '".$row['tags']."', '".$row['privacy']."', '".$row['scriptType']."', '".$row['timestamp']."', '".$row['downloads']."', '".$row['views']."')");
+                    $connectionHandle->query("INSERT INTO repo_entries_deleted (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '".$row['author']."', '".$row['name']."', '".$row['description']."', '".$row['tags']."', '".$row['privacy']."', '".$row['scriptType']."', '".$row['timestamp']."', '".$row['edited']."', '".$row['downloads']."', '".$row['views']."')");
                     $connectionHandle->query("DELETE FROM repo_entries WHERE pubID='$pubID'");
                     $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
                     $rowCode = $queryCode->fetch_assoc();
@@ -911,10 +983,6 @@ switch(strtolower($path[0])){
         $output = '404.tpl';
         break;
 }
-
-/*
- * If the page is supposed to read raw data, echo it and die.
- */
 if(!isset($output)){ $smarty->assign('output', '404.tpl'); }else{ $smarty->assign('output', $output); }
 $smarty->display('index.tpl');
 ?>
