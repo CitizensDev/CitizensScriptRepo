@@ -16,13 +16,17 @@
             {if $typeError}<div class="control-group error">{/if}<label>Type of code:</label>
             <input type="hidden" name="typeOfScript" value="None" />
             <script>
-                $('.nav-tabs').button()
+                $('#type1')
+                    .ready( function(){
+                        var btn = $(this)
+                        btn.button('toggle')
+                    })
                 
             </script>
             <div class="btn-group" data-toggle="buttons-radio">
-                <input onclick="this.form.elements['typeOfScript'].value = '1';" id="type1" type="button" class="btn" value="Citizens Script" />
-                <input onclick="this.form.elements['typeOfScript'].value = '2';" id="type2" type="button" class="btn" value="Denizen Script" />
-                <input onclick="this.form.elements['typeOfScript'].value = '3';" id="type3" type="button" class="btn" value="Uhh... Script" />
+                <button {if $buttonSelected==1}onload="$('#type1').button('toggle')" {/if}onclick="this.form.elements['typeOfScript'].value = '1';" id="type1" type="button" class="btn" value="Citizens Script" data-toggle="button">Citizens Script</button>
+                <input {if $buttonSelected==2}onload="$().button('toggle')" {/if}onclick="this.form.elements['typeOfScript'].value = '2';" id="type2" type="button" class="btn" value="Denizen Script" />
+                <input {if $buttonSelected==3}onload="$().button('toggle')" {/if}onclick="this.form.elements['typeOfScript'].value = '3';" id="type3" type="button" class="btn" value="Uhh... Script" />
             </div>{if $typeError}</div>{/if}
             <small class="muted">Pick one!</small><br><br>
             <label for='privacy'>Privacy:</label>

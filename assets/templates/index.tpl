@@ -41,7 +41,7 @@
                   <div class="nav-collapse">
                     <ul class="nav">
                       <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/"><i class="icon-home"></i> Home</a></li>
-                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/list"><i class="icon-list"></i> List</a></li>
+                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/browse"><i class="icon-list"></i> Browse</a></li>
                       <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post"><i class="icon-pencil"></i> Post</a></li>
                       <!-- Hmmmm, what to put here....<li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
@@ -87,7 +87,7 @@
         </section>
         <div class="container">
             <div class="alert alert-info">
-                <strong>Notice!</strong> This site is still in development. Some features may not work properly.
+                <strong>Notice!</strong> This site is still in development. Everything works except Search and user profiles.
             </div>
             {include file="$output"}
             <footer class="footer">

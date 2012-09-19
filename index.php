@@ -177,7 +177,7 @@ function getCurrentTimeZone($username){
     }
 }
 function getTimeZoneOptions($active){
-    $timezone_identifiers = DateTimeZone::listIdentifiers();
+    $timezone_identifiers = DateTimeZone::browseIdentifiers();
     $selected = '';
     $data = null;
     $continent = null;
@@ -230,6 +230,75 @@ function isActiveUser($user){
 
 class ScriptRepo{
     public $mainSite = 'http://scripts.citizensnpcs.com/';
+    public $loggedIn = false;
+    protected $databaseHandle;
+    protected $smarty;
+    public function __construct(){
+        $this->databaseHandle = new mysqli('localhost', 'repo', $GLOBALS['password'], 'ScriptRepo');
+        if(isset($_SESSION['loggedIn'])){
+            $this->loggedIn = $_SESSION['loggedIn'];
+        }else{
+            $_SESSION['loggedIn'] = false;
+        }
+        $this->smarty = new Smarty;
+        $this->smarty->setTemplateDir('/usr/share/nginx/www/scripts/assets/templates');
+        $this->smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c');
+        $this->smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
+        $this->smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
+        $this->smarty->assign('loggedIn', $_SESSION['loggedIn']);
+        $this->smarty->assign('admin', $_SESSION['admin']);
+        $this->smarty->assign('adminNeeded', false);
+    }
+    public function handlePage($path){
+        switch($path[0]){
+            case 'credits':
+                break;
+            case 'download':
+                break;
+            case 'raw':
+                break;
+            case 'login':
+                break;
+            case 'settings':
+                break;
+            case 'logout':
+                break;
+            case 'resendconfirmation':
+                break;
+            case 'register':
+                break;
+            case 'post':
+                break;
+            case 'verify':
+                break;
+            case 'edit':
+                break;
+            case 'myscripts':
+                break;
+            case 'search':
+                break;
+            case 'admin':
+                break;
+            case 'support':
+                break;
+            case 'test':
+                break;
+            case 'browse':
+                break;
+            case 'view':
+                break;
+            case 'user':
+                break;
+            case 'recover':
+                break;
+            case 'index':
+                break;
+            case 'action':
+                break;
+            default:
+                break;
+        }
+    }
     public function loginUser($username, $password){
         if(false){
             
@@ -522,6 +591,7 @@ switch(strtolower($path[0])){
         $smarty->assign('tags', false);
         $smarty->assign('name', false);
         $smarty->assign('nameError', false);
+        $smarty->assign('buttonSelected', 1);
         if(!$_SESSION['loggedIn']){
             $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
             header('Location: http://scripts.citizensnpcs.com/login');
@@ -731,8 +801,8 @@ switch(strtolower($path[0])){
                 $query = "SELECT * FROM repo_entries WHERE MATCH('name') AGAINST ('$searchTerm')";
             case $searchSettings=array()
         }*/
-        $smarty->assign('activePage', 'list');
-        $queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
+        $smarty->assign('activePage', 'browse');
+        $querybrowseing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
         $queryLikes = $connectionHandle->query("SELECT * FROM repo_likes");
         $likesArray = array();
         while($row = $queryLikes->fetch_assoc()){
@@ -804,9 +874,9 @@ switch(strtolower($path[0])){
             echo "Mailed to ".$row['username']." at ".$row['email']."\n";
         }
         exit;
-    case 'list':
-        $smarty->assign('activePage', 'list');
-        $queryListing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
+    case 'browse':
+        $smarty->assign('activePage', 'browse');
+        $querybrowseing = $connectionHandle->query("SELECT * FROM repo_entries WHERE privacy=1");
         $queryLikes = $connectionHandle->query("SELECT * FROM repo_likes");
         $likesArray = array();
         while($row = $queryLikes->fetch_assoc()){
@@ -822,9 +892,9 @@ switch(strtolower($path[0])){
             $pageNumber = intval($path[1]);
             if(isset($path[2])){ $numberPerPage = intval($path[2]); }
         }
-        if($queryListing!=false){
-            $numberOfPages = ceil($queryListing->num_rows/$numberPerPage);
-            $resultData = getResults($queryListing, $numberPerPage, $pageNumber);
+        if($querybrowseing!=false){
+            $numberOfPages = ceil($querybrowseing->num_rows/$numberPerPage);
+            $resultData = getResults($querybrowseing, $numberPerPage, $pageNumber);
             $smarty->assign('resultArray', $resultData);
         }
         if($numberOfPages<5){
@@ -844,7 +914,7 @@ switch(strtolower($path[0])){
         $queryUsers = $connectionHandle->query("SELECT * FROM repo_users");
         if($queryUsers!=false){ $userArray = getResults($queryUsers, $numberPerPage, $pageNumber); }
         $smarty->assign('userArray', $userArray);
-        $output = 'list.tpl';
+        $output = 'browse.tpl';
         break;
     case 'view':
         $pubID = $connectionHandle->real_escape_string(strtolower($path[1]));
