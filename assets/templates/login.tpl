@@ -14,7 +14,7 @@
         <input class="control-label" type='password' name='password' id='password' maxlength="50" /><br />{if $passwordError}</div>{/if}
         <input class="btn btn-primary" type='submit' name='Submit' value='Submit' />
         <br /><br /><p>Don't have a login? <a href="register">Register now!</a>
-        <br />Forgot your password? <a href="http://scripts.citizensnpcs.com/recover">Recover it!</a></p>
+        <br />Forgot your password? <a href="{buildURL page='recover'}">Recover it!</a></p>
         </div>
     </fieldset>
 </form>

@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+<!DOCTYPE html>{function name=buildURL}{$ScriptRepo->mainSite}{$page}{/function}
 <html>
     <head>
         <title>Citizens Script Repo</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <link rel="stylesheet" href="http://scripts.citizensnpcs.com/assets/css/bootstrap.min.css" type="text/css" media="screen">
+        <link rel="stylesheet" href="{buildURL page='assets/css/bootstrap.min.css'}" type="text/css" media="screen">
         <!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
-        <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/js/jquery.timeago.js"></script>
-        <script type="text/javascript" src="http://scripts.citizensnpcs.com/assets/tiny_mce/tiny_mce.js"></script>
+        <script type="text/javascript" src="{buildURL page='assets/js/bootstrap.min.js'}"></script>
+        <script type="text/javascript" src="{buildURL page='assets/js/jquery.timeago.js'}"></script>
+        <script type="text/javascript" src="{buildURL page='assets/tiny_mce/tiny_mce.js'}"></script>
         <script>
             jQuery(document).ready(function() {
                 jQuery("abbr.timeago").timeago();
@@ -37,12 +37,12 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                   </a>
-                  <a class="brand" href="http://scripts.citizensnpcs.com/">Citizens Script Repo</a>
+                  <a class="brand" href="{buildURL page=''}">Citizens Script Repo</a>
                   <div class="nav-collapse">
                     <ul class="nav">
-                      <li{if $activePage=="home"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/"><i class="icon-home"></i> Home</a></li>
-                      <li{if $activePage=="list"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/browse"><i class="icon-list"></i> Browse</a></li>
-                      <li{if $activePage=="post"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/post"><i class="icon-pencil"></i> Post</a></li>
+                      <li{if $activePage=="home"} class="active"{/if}><a href="{buildURL page=''}"><i class="icon-home"></i> Home</a></li>
+                      <li{if $activePage=="list"} class="active"{/if}><a href="{buildURL page='browse'}"><i class="icon-list"></i> Browse</a></li>
+                      <li{if $activePage=="post"} class="active"{/if}><a href="{buildURL page='post'}"><i class="icon-pencil"></i> Post</a></li>
                       <!-- Hmmmm, what to put here....<li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
                         <ul class="dropdown-menu">
@@ -54,28 +54,28 @@
                           <li><a href="#">go here, or else</a></li>
                           <li><a href="#">this will stay</a></li>
                         </ul> 
-                      </li>-->{if $admin}
-                      <li {if $activePage=="admin"} class="active"{/if}><a href="http://scripts.citizensnpcs.com/admin">Admin {if $adminNeeded}(!){/if}</a></li>{/if}
+                      </li>-->{if $ScriptRepo->admin} 
+                      <li {if $activePage=="admin"} class="active"{/if}><a href="{buildURL page='admin'}">Admin {if $adminNeeded}<i class="icon-warning-sign"></i>{/if}</a></li>{/if}
                     </ul>
-                    <form class="navbar-search pull-left" id="searchQuery" method="post" action="http://scripts.citizensnpcs.com/search">
+                    <form class="navbar-search pull-left" id="searchQuery" method="post" action="{buildURL page='search'}">
                       <input type="text" class="search-query" name='q' placeholder="Search">
                     </form>
                     <ul class="nav pull-right">
-                      {if $loggedIn}
+                      {if $ScriptRepo->loggedIn}
                       <li class="dropdown">
-                        <a href="" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> {$username} <b class="caret"></b></a>
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown"><i class="icon-user"></i> {$ScriptRepo->username} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                          <li><a href="http://scripts.citizensnpcs.com/user/{$username}">Your Profile</a></li>
-                          <li><a href="http://scripts.citizensnpcs.com/settings">Settings</a></li>
-                          <li><a href="http://scripts.citizensnpcs.com/myscripts">Your scripts</a></li>
+                          <li><a href="{buildURL page='user/'}{$ScriptRepo->username}">Your Profile</a></li>
+                          <li><a href="{buildURL page='settings'}">Settings</a></li>
+                          <li><a href="{buildURL page='myscripts'}">Your scripts</a></li>
                           <li class="divider"></li>
-                          <li><a href="http://scripts.citizensnpcs.com/logout">Logout</a></li>
+                          <li><a href="{buildURL page='logout'}">Logout</a></li>
                         </ul>
                       </li>
                       {else}
                       <li>
                         <ul class="nav">
-                          <li {if $activePage=="login"}class="active"{/if}><a href="http://scripts.citizensnpcs.com/login">Login/Register</a></li>
+                          <li {if $activePage=="login"}class="active"{/if}><a href="{buildURL page='login'}">Login/Register</a></li>
                         </ul>
                       </li>
                       {/if}
@@ -87,11 +87,11 @@
         </section>
         <div class="container">
             <div class="alert alert-info">
-                <strong>Notice!</strong> This site is still in development. Everything works except Search and user profiles.
+                <strong>Notice!</strong> This site is the Citizens Script Repo v2. It's being recoded from scratch as we speak!
             </div>
             {include file="$output"}
             <footer class="footer">
-                <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="http://scripts.citizensnpcs.com/support">Support</a> - <a href="http://scripts.citizensnpcs.com/credits">Credits</a></div>
+                <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="{buildURL page='support'}">Support</a> - <a href="{buildURL page='credits'}">Credits</a></div>
             </footer>
         </div>
     </body>

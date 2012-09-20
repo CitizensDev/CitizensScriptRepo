@@ -2,3 +2,10 @@ nbproject
 nbproject/*
 password.php
 /assets/Smarty/
+/assets/recaptchalib.php
+/assets/ayah.php
+/todo.txt
+/assets/geshi/
+/assets/phpmailer/
+!/assets/geshi/yaml.php
+/assets/tiny_mce/

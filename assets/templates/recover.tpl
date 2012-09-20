@@ -1,1 +1,1 @@
-Sorry, this doesn't work yet. If you need your password reset, try <a href="http://scripts.citizensnpcs.com/support">contacting us</a>!
+Sorry, this doesn't work yet. If you need your password reset, try <a href="{buildURL page='support'}">contacting us</a>!
