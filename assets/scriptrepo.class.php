@@ -6,7 +6,8 @@ class ScriptRepo{
     public $admin = false;
     public $bCrypt;
     public $username;
-    protected $databaseHandle;
+    public $databaseHandle;
+    public $ayah;
     protected $smarty;
     public function __construct(){
         $this->databaseHandle = new mysqli('localhost', 'repo', $GLOBALS['password'], 'ScriptRepo');
@@ -169,7 +170,7 @@ class ScriptRepo{
                 break;
             case 'register':
                 include('password.php');
-                $ayah = new AYAH($publisherKey, $scoringKey);
+                $this->ayah = new AYAH($publisherKey, $scoringKey);
                 $variableArray = array(
                     'activePage' => false,
                     'username' => false,
@@ -179,7 +180,7 @@ class ScriptRepo{
                     'emailError' => false,
                     'passwordError' => false,
                     'ayahError' => false,
-                    'ayah' => $ayah->getPublisherHTML(),
+                    'ayah' => $this->ayah->getPublisherHTML(),
                     'output' => 'register.tpl'
                 );
                 if(isset($_POST['registerForm'])){
@@ -640,7 +641,7 @@ class ScriptRepo{
                 'email' => $email,
                 'usernameError' => true
             );
-        }elseif(!validEmail($postData['email'])){
+        }elseif(!filter_var($postData['email'], FILTER_VALIDATE_EMAIL)){
             return array(
                 'registerSuccess' => false,
                 'username' => $user,
@@ -664,7 +665,7 @@ class ScriptRepo{
                 'userError' => true,
                 'registerError' => 'Username already in use!'
             );
-        }elseif(!$ayah->scoreResult()){
+        }elseif(!$this->ayah->scoreResult()){
             return array(
                 'registerSuccess' => false,
                 'username' => $user,
