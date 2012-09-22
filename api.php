@@ -20,7 +20,7 @@ class ScriptRepoAPI{
                 if(isset($args['user']) && isset($args['pass'])){
                     $loginStatus = $this->ScriptRepo->loginUser($args['user'], $args['pass']);
                     if($loginStatus['loginSuccess']){
-                        $sessionKey = makeSessionID();
+                        $sessionKey = $this->makeSessionID();
                         $user = $this->ScriptRepo->databaseHandle->real_escape_string($args['user']);
                         $time = time()+3600;
                         $this->ScriptRepo->queryDatabase("INSERT INTO repo_sessions (id, username, sessionKey, time) VALUES ('NULL', '$user', '$sessionKey', '$time')");
@@ -48,10 +48,10 @@ class ScriptRepoAPI{
             case isset($args['browse']):
                 if(isset($args['count'])){ $count = intval($args['count']); }else{ $count = 20; }
                 if(isset($args['page'])){ $page = intval($args['page']); }else{ $page = 1; }
-                $queryBrowse = $this->ScriptRepo->queryDatabase("SELECT * FROM repo_entries");
+                $queryBrowse = $this->ScriptRepo->queryDatabase("SELECT * FROM repo_entries WHERE privacy=1");
                 $this->data = array_merge(array('success' => true), $this->ScriptRepo->getResults($queryBrowse, $count, $page));
                 break;
-            case 'view':
+            case isset($args['view']):
                 if(isset($args['pubID'])){
                     $pubID = $this->ScriptRepo->databaseHandle->real_escape_string($args['pubID']);
                     $queryView = $this->ScriptRepo->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
@@ -64,6 +64,7 @@ class ScriptRepoAPI{
                 }else{
                     $this->data = array('success' => false);
                 }
+                break;
         }
     }
     public function outputData(){
