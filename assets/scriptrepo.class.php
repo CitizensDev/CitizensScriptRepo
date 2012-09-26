@@ -37,14 +37,14 @@ class ScriptRepo{
         }
         if(isset($_POST['q'])){
             $query = str_replace(array("%20", " "), "+", $_POST['q']);
-            $this->redirect('search/'.$query.'/1/1/1/1');
+            $this->redirect('search/'.$query);
         }
         if(isset($_POST['q2'])){
             $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
-            if(isset($_POST['1'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
+            /*if(isset($_POST['1'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
             if(isset($_POST['2'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
             if(isset($_POST['3'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
-            if(isset($_POST['4'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
+            if(isset($_POST['4'])){ $query = $query."/1"; }else{ $query = $query."/0"; } */
             $this->redirect('search/'.$query);
         }
     }
@@ -93,7 +93,7 @@ class ScriptRepo{
                     $rowCode = $queryCode->fetch_assoc();
                     $newCount = $row['downloads']+1;
                     $this->queryDatabase("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
-                    echo "<html><body><pre>".$rowCode['code']."</pre></body></html";
+                    echo "<html><body><pre>".htmlspecialchars($rowCode['code'])."</pre></body></html";
                     exit;
                 }
                 break;
@@ -131,28 +131,17 @@ class ScriptRepo{
                 }
                 break;
             case 'settings':
+                $variableArray = array(
+                    'output' => 'settings.tpl',
+                    'successMessage' => false,
+                );
                 if(!$this->loggedIn){
                     $_SESSION['loginInfo'] = 'You must be logged in to change settings!';
                     $this->redirect('login');
                 }
-                $currentTimezone = $this->getCurrentTimeZone($this->username);
-                $variableArray = array(
-                    'activePage' => false,
-                    'successMessage' => false,
-                    'timezones' => $this->getTimeZoneOptions($currentTimezone),
-                    'output' => 'settings.tpl'
-                );
                 if(isset($_POST['Save'])){
-                    // Handle the update.
-                    if($_POST['timezone']!=$currentTimezone){
-                        // They updated the timezone. Make the changes.
-                        $newTimezone = $this->databaseHandle->real_escape_string($_POST['timezone']);
-                        $this->queryDatabase("UPDATE repo_users SET timezone='$newTimezone' WHERE username='".$this->username."'");
-                        $currentTimezone = $newTimezone;
-                    }
                     $variableArray = array_merge($variableArray, array('successMessage' => "Successfully updated your settings."));
                 }
-                $variableArray = array_merge($variableArray, array('timezones' => $this->getTimeZoneOptions($currentTimezone)));
                 break;
             case 'logout':
                 session_destroy();
@@ -228,7 +217,7 @@ class ScriptRepo{
                     $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$idtoedit'");
                     $rowCode = $queryCode->fetch_assoc();
                     $row = $queryEdit->fetch_assoc();
-                    $variableArray = array($variableArray, array(
+                    $variableArray = array_merge($variableArray, array(
                         'name' => $row['name'],
                         'scriptCode' => $rowCode['code'],
                         'description' => $row['description'],
@@ -325,13 +314,12 @@ class ScriptRepo{
                 $pageNumber = 1;
                 $resultPages = array(1, 2, 3, 4, 5);
                 // Get the page number and number of results per page.
-                if(isset($path[5])){
-                    $pageNumber = intval($path[5]);
-                    if(isset($path[6])){ $numberPerPage = intval($path[6]); }
+                if(isset($path[2])){
+                    $pageNumber = intval($path[2]);
+                    if(isset($path[3])){ $numberPerPage = intval($path[3]); }
                 }
-                $query = "SELECT * FROM repo_entries WHERE MATCH('name', 'description', 'tags') AGAINST ('$searchTerm')";
-                $querySearch = $this->queryDatabase($query);
-                if($querySearch!=false){
+                $querySearch = $this->searchForResults($searchTerm);
+                if($querySearch!=false && $numberPerPage!=0){
                     $numberOfPages = ceil($querySearch->num_rows/$numberPerPage);
                     $resultData = $this->getResults($querySearch, $numberPerPage, $pageNumber);
                 }else{
@@ -352,6 +340,7 @@ class ScriptRepo{
                     'resultPageNumber' => $pageNumber,
                     'resultsPerPage' => $numberPerPage,
                     'resultPages' => $resultPages,
+                    'searchQuery' => $searchTerm,
                     'output' => 'result.tpl',
                     'resultArray' => $resultData,
                     'likesArray' => $likesArray,
@@ -375,23 +364,69 @@ class ScriptRepo{
                 $variableArray = array(
                     'activePage' => 'browse',
                     'output' => 'browse.tpl',
+                    'listingType' => 'all',
+                    'sortType' => 'mostLiked'
                 );
-                $queryBrowse = $this->queryDatabase("SELECT * FROM repo_entries WHERE privacy=1");
-                $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
-                $likesArray = array();
-                while($row = $queryLikes->fetch_assoc()){
-                    if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
-                    $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
-                }
-                $variableArray = array_merge($variableArray, array('likesArray' => $likesArray));
+                $browseQuery = "SELECT * FROM repo_entries WHERE privacy=1";
                 $numberPerPage = 20;
                 $pageNumber = 1;
                 $resultPages = array(1, 2, 3, 4, 5);
                 // Get the page number and number of results per page.
                 if(isset($path[1])){
-                    $pageNumber = intval($path[1]);
-                    if(isset($path[2])){ $numberPerPage = intval($path[2]); }
+                    $typeOfSearch = $path[1];
+                    switch($typeOfSearch){
+                        case NULL:
+                        case "":
+                        case "all":
+                            break;
+                        case "citizen":
+                        case "citizens":
+                            $browseQuery = $browseQuery." AND scriptType=1";
+                            $variableArray = array_merge($variableArray, array('listingType' => 'citizens'));
+                            break;
+                        case "denizen":
+                        case "denizens":
+                            $browseQuery = $browseQuery." AND scriptType=2";
+                            $variableArray = array_merge($variableArray, array('listingType' => 'denizens'));
+                            break;
+                    }
+                    if(isset($path[2])){
+                        $sort = $path[2];
+                        switch($sort){
+                            case "newest":
+                                $browseQuery = $browseQuery." ORDER BY timestamp DESC";
+                                break;
+                            case "oldest":
+                                $browseQuery = $browseQuery." ORDER BY timestamp ASC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'oldest'));
+                                break;
+                            case "mostLiked":
+                                $browseQuery = $browseQuery." ORDER BY likes DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
+                                break;
+                            case "mostViewed":
+                                $browseQuery = $browseQuery." ORDER BY views DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostViewed'));
+                                break;
+                            case "mostDownloads":
+                                $browseQuery = $browseQuery." ORDER BY downloads DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostDownloads'));
+                                break;
+                            default:
+                                $browseQuery = $browseQuery." ORDER BY likes DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
+                                break;
+                        }
+                        if(isset($path[3])){
+                            $pageNumber = intval($path[3]);
+                            if(isset($path[4])){ $numberPerPage = intval($path[4]); }
+                        }
+                    }
                 }
+                if(!isset($path[2])){
+                    $browseQuery = $browseQuery." ORDER BY likes DESC";
+                }
+                $queryBrowse = $this->queryDatabase($browseQuery);
                 if($queryBrowse!=false){
                     $numberOfPages = ceil($queryBrowse->num_rows/$numberPerPage);
                     $resultData = $this->getResults($queryBrowse, $numberPerPage, $pageNumber);
@@ -408,7 +443,7 @@ class ScriptRepo{
                     $start = $pageNumber-2;
                 }
                 if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
-                $queryUsers = $this->queryDatabase("SELECT * FROM repo_users");
+                $queryUsers = $this->queryDatabase("SELECT * FROM repo_users ORDER BY staff DESC, username");
                 if($queryUsers!=false){ $userArray = $this->getResults($queryUsers, $numberPerPage, $pageNumber); }
                 $variableArray = array_merge($variableArray, array(
                     'resultPageNumber' => $pageNumber,
@@ -520,21 +555,32 @@ class ScriptRepo{
                 if(!isset($path[2])){
                     $this->redirect('');
                 }
-                $pubID = $this->databaseHandle->real_escape_string($path[2]);
-                $existQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                if($existQuery->num_rows==0){
-                    $this->redirect('');
-                }
                 if(!$this->loggedIn){
                     // If they submitted a comment without being logged in, reject it.
                     $_SESSION['loginInfo'] = 'You must be logged in to do that!';
                     $this->redirect('login');
                 }
                 $user = $this->username;
+                var_dump($path);
+                if(in_array($path[1], array('1', '4', '5'))){
+                    $pubID = $this->databaseHandle->real_escape_string($path[2]);
+                    $existQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
+                    if($existQuery->num_rows==0){
+                        $this->redirect('');
+                    }
+                }elseif($path[1]=="6"){
+                    $commentID = $this->databaseHandle->real_escape_string($path[2]);
+                    $existComment = $this->queryDatabase("SELECT * FROM repo_comments WHERE id='$commentID'");
+                    if($existComment->num_rows==0){
+                        $this->redirect('');
+                    }
+                }
                 switch($path[1]){
                     case '1':
                         $queryLike = $this->queryDatabase("SELECT * FROM repo_likes WHERE pubID='$pubID' AND author='$user'");
                         if($queryLike->num_rows==0){
+                            $existRow = $existQuery->fetch_assoc();
+                            $this->queryDatabase("UPDATE repo_entries SET likes='".($existRow+1)."' WHERE pubID='$pubID'");
                             $this->queryDatabase("INSERT INTO repo_likes (id, pubID, author) VALUES ('NULL', '$pubID', '$user')");
                             $_SESSION['viewSuccess'] = "You have successfully liked this script.";
                         }
@@ -561,8 +607,21 @@ class ScriptRepo{
                         if($queryFlag->num_rows==0){
                             $this->queryDatabase("INSERT INTO repo_flags (id, author, type, flaggedID) VALUES ('NULL', '$user', 1, '$pubID')");
                             $_SESSION['viewSuccess'] = "You have successfully flagged this script.";
+                        }else{
+                            $_SESSION['viewFailure'] = "You have already flagged this script!";
                         }
                         $this->redirect('view/'.$pubID);
+                        break;
+                    case '6':
+                        $queryFlag = $this->queryDatabase("SELECT * FROM repo_flags WHERE type=2 AND flaggedID='$commentID' AND author='$user'");
+                        if($queryFlag->num_rows==0){
+                            $this->queryDatabase("INSERT INTO repo_flags (id, author, type, flaggedID) VALUES ('NULL', '$user', 2, '$commentID')");
+                            $_SESSION['viewSuccess'] = "You have successfully flagged this comment.";
+                        }else{
+                            $_SESSION['viewFailure'] = "You have already flagged this comment!";
+                        }
+                        $existRow = $existComment->fetch_assoc();
+                        $this->redirect('view/'.$existRow['entryID']);
                         break;
                 }
                 break;
@@ -685,7 +744,7 @@ class ScriptRepo{
         $tagsRaw = explode(',', $postData['tags']);
         $tags = array();
         foreach($tagsRaw as $tag){
-            if($tag!=""){ array_push($tags, trim($tag)); }
+            if($tag!=""){ array_push($tags, str_replace("_", "", trim($tag))); }
         }
         $values = array();
         if(isset($postData['name']) && $postData['name']!=""){ $values = array_merge($values, array('name' => $postData['name'])); }
@@ -796,39 +855,16 @@ class ScriptRepo{
         }
         return $outputArray;
     }
+    public function searchForResults($query, $args=array()){
+        $args = $args; // Disabled for now. Not sure how to handle it without making 16 fulltext indexes :/
+        $queryTerm = $this->databaseHandle->real_escape_string($query);
+        $queryString = "SELECT * FROM repo_entries WHERE MATCH (name,author,description,tags) AGAINST('$queryTerm')";
+        $queryResult = $this->queryDatabase($queryString);
+        return $queryResult;
+    }
     private function redirect($newPage){
         header("Location: ".$this->mainSite.$newPage);
         exit;
-    }
-    private function getCurrentTimeZone($username){
-        $username = $GLOBALS['connectionHandle']->real_escape_string($username);
-        $query = $GLOBALS['connectionHandle']->query("SELECT * FROM repo_users WHERE username='$username'");
-        if($query!=false){
-            $row = $query->fetch_assoc();
-            return trim($row['timezone']);
-        }
-    }
-    private function getTimeZoneOptions($active){
-        $timezone_identifiers = DateTimeZone::browseIdentifiers();
-        $selected = '';
-        $data = null;
-        $continent = null;
-        foreach( $timezone_identifiers as $value ){
-            if ( preg_match( '/^(America|Antartica|Arctic|Asia|Atlantic|Europe|Indian|Pacific)\//', $value ) ){
-                $ex=explode("/",$value);//obtain continent,city
-                if ($continent!=$ex[0]){
-                    if ($continent!="") $data = $data.'</optgroup>';
-                        $data = $data.'<optgroup label="'.$ex[0].'">';
-                }
-                $city=$ex[1];
-                $continent=$ex[0];
-                    if($value==$active){ $selected='selected="selected"'; }
-                    if(isset($ex[2])){ $city = implode("/",array($ex[1], $ex[2])); }
-                $data = $data.'<option value="'.$value.'" '.$selected.'>'.$city.'</option>';                
-            }
-                $selected = '';
-        }
-        return $data;
     }
 }
 ?>

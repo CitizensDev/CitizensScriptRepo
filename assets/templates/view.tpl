@@ -35,7 +35,7 @@
         <tbody>
             {foreach $commentData as $comment}
                 <tr>
-                    <td><small>{$comment.timestamp}</small> - <a href="{buildURL page='user/'}{$comment.author}">{$comment.author}</a>: 
+                    <td><small>{$comment.timestamp}</small> - <a href="{buildURL page='user/'}{$comment.author}">{$comment.author}</a>: <button onclick='document.location.href="{buildURL page='action/6/'}{$comment.id}"' rel="tooltip" title="Report" class="btn btn-warning pull-right"><i class="icon-flag"></i></button>
                     <br>
                     <br>{$comment.content}</td>
                 </tr>
