@@ -15,9 +15,9 @@
     <div class="btn-group">
         <a class="btn dropdown-toggle" data-toggle="dropdown">{if $listingType=="all"}Displaying all script types{elseif $listingType=="citizens"}Displaying only Citizens Scripts{elseif $listingType=="denizens"}Displaying only Denizen Scripts{/if} <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            {if $listingType!="all"}<li><a href="{buildURL page='browse/'}all/{$sortType}/{$resultPageNumber}/{$resultsPerPage}/">All Script Types</a></li>{/if}
-            {if $listingType!="citizens"}<li><a href="{buildURL page='browse/'}citizens/{$sortType}/{$resultPageNumber}/{$resultsPerPage}/">Only Citizens Scripts</a></li>{/if}
-            {if $listingType!="denizens"}<li><a href="{buildURL page='browse/'}denizens/{$sortType}/{$resultPageNumber}/{$resultsPerPage}/">Only Denizen Scripts</a></li>{/if}
+            {if $listingType!="all"}<li><a href="{buildURL page='browse/'}all/{$sortType}/1/{$resultsPerPage}/">All Script Types</a></li>{/if}
+            {if $listingType!="citizens"}<li><a href="{buildURL page='browse/'}citizens/{$sortType}/1/{$resultsPerPage}/">Only Citizens Scripts</a></li>{/if}
+            {if $listingType!="denizens"}<li><a href="{buildURL page='browse/'}denizens/{$sortType}/1/{$resultsPerPage}/">Only Denizen Scripts</a></li>{/if}
         </ul>
     </div><br>
     <div class="btn-group">
@@ -41,7 +41,7 @@
 </div>
 <!-- Navigation -->
 <div id="navigation" style="text-align:center;">
-    Results per page: {if $resultsPerPage!=20}<a href="{buildURL page='browse/'}{$listingType}/{$sortType}/{$resultPageNumber}/20">{/if}20{if $resultsPerPage!=20}</a>{/if}, {if $resultsPerPage!=50}<a  href="{buildURL page='browse/'}{$listingType}/{$resultPageNumber}/50">{/if}50{if $resultsPerPage!=50}</a>{/if}, {if $resultsPerPage!=100}<a  href="{buildURL page='browse/'}{$listingType}/{$resultPageNumber}/100">{/if}100{if $resultsPerPage!=100}</a>{/if}, {if $resultsPerPage!=200}<a  href="{buildURL page='browse/'}{$listingType}/{$resultPageNumber}/200">{/if}200{if $resultsPerPage!=200}</a>{/if}
+    Results per page: {if $resultsPerPage!=20}<a href="{buildURL page='browse/'}{$listingType}/{$sortType}/{$resultPageNumber}/20">{/if}20{if $resultsPerPage!=20}</a>{/if}, {if $resultsPerPage!=50}<a  href="{buildURL page='browse/'}{$listingType}/{$sortType}/{$resultPageNumber}/50">{/if}50{if $resultsPerPage!=50}</a>{/if}, {if $resultsPerPage!=100}<a  href="{buildURL page='browse/'}{$listingType}/{$sortType}/{$resultPageNumber}/100">{/if}100{if $resultsPerPage!=100}</a>{/if}, {if $resultsPerPage!=200}<a  href="{buildURL page='browse/'}{$listingType}/{$sortType}/{$resultPageNumber}/200">{/if}200{if $resultsPerPage!=200}</a>{/if}
     <div class="pagination pagination-centered">
         <ul>
             {if $resultPageNumber==1}<li class="disabled"><a>Prev</a></li>

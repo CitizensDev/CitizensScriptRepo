@@ -1,6 +1,12 @@
 <div class="well well-small span3">
-    <h4>{$usernameForPage}'s Profile:</h4><br>
-    So....this page isn't done yet!
+    <table class="table">
+        <thead><tr><th><h4 style="text-align:center;">{$usernameForPage}</h4></th></tr></thead>
+        <tr><td><b>Joined:</b> <abbr class="timeago" title="{$user.registered}">{$user.registered}</abbr></td></tr>
+        <tr><td><b>Scripts Posted:</b> {$scriptsPosted}</td></tr>
+        <tr><td><b>Comments Added:</b> {$commentsAdded}</td></tr>
+        <tr><td><b>Scripts Liked:</b> {$scriptsLiked}</td></tr>{if $user.staff==1}
+        <tr><td><b><i class="icon-star"></i> This user is Staff</b></td></tr>{/if}
+    </table>
 </div>
 <div class="well span8">
     <h3 style="text-align:center;">Scripts</h3>
@@ -12,7 +18,7 @@
             <br><small>Author: {$result.author}</small><span class="pull-right" data-placement="right" rel="tooltip" title="Downloads"><i class="icon-download"></i> {$result.downloads}</span>
             </td></tr>{/if}
         {foreachelse}
-            <tr><td><p style="text-align:center;">This user haven't posted any scripts!</p></td></tr>
+            <tr><td><p style="text-align:center;">This user hasn't posted any scripts!</p></td></tr>
         {/foreach}
     </table>
 </div>

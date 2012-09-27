@@ -87,7 +87,7 @@
         </section>
         <div class="container">
             <div class="alert alert-info">
-                <strong>Notice!</strong> This site is the Citizens Script Repo v2. AgentK rewrote the entire site in 5 hours. o.o
+                <strong>Notice!</strong> This site is the Citizens Script Repo v2.1 - Searching works :D
             </div>
             {include file="$output"}
             <footer class="footer">

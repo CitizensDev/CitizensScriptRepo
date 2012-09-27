@@ -10,7 +10,17 @@ class ScriptRepo{
     public $ayah;
     protected $smarty;
     public function __construct(){
-        $this->databaseHandle = new mysqli('localhost', 'repo', $GLOBALS['password'], 'ScriptRepo');
+        $this->initSmarty();
+        $this->populateVariables();
+        $this->webStuff();
+        $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
+        $path = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
+        array_shift($_GET);
+        $this->handlePage($path);
+    }
+    public function populateVariables(){
+        require('password.php');
+        $this->databaseHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
         $this->bCrypt = new Bcrypt(12);
     }
     public function initSmarty(){
@@ -303,6 +313,7 @@ class ScriptRepo{
                 );
                 break;
             case 'search':
+                if(!isset($path[1])){ $path[1] = null; } // Stop an undefined offset.
                 $searchTerm = $this->databaseHandle->real_escape_string(urldecode($path[1]));
                 $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
                 $likesArray = array();
@@ -313,12 +324,70 @@ class ScriptRepo{
                 $numberPerPage = 20;
                 $pageNumber = 1;
                 $resultPages = array(1, 2, 3, 4, 5);
+                $append = "";
+                $variableArray = array(
+                    'listingType' => 'all',
+                    'sortType' => 'mostLiked',
+                    'searchTerm' => htmlspecialchars($searchTerm),
+                    'searchTermURL' => str_replace(" ", "+", $searchTerm)
+                );
                 // Get the page number and number of results per page.
                 if(isset($path[2])){
-                    $pageNumber = intval($path[2]);
-                    if(isset($path[3])){ $numberPerPage = intval($path[3]); }
+                    $typeOfSearch = $path[2];
+                    switch($typeOfSearch){
+                        case NULL:
+                        case "":
+                        case "all":
+                            break;
+                        case "citizen":
+                        case "citizens":
+                            $append = $append." AND scriptType=1";
+                            $variableArray = array_merge($variableArray, array('listingType' => 'citizens'));
+                            break;
+                        case "denizen":
+                        case "denizens":
+                            $append = $append." AND scriptType=2";
+                            $variableArray = array_merge($variableArray, array('listingType' => 'denizens'));
+                            break;
+                    }
+                    if(isset($path[3])){
+                        $sort = $path[3];
+                        switch($sort){
+                            case "newest":
+                                $append = $append." ORDER BY timestamp DESC";
+                                break;
+                            case "oldest":
+                                $append = $append." ORDER BY timestamp ASC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'oldest'));
+                                break;
+                            case "mostLiked":
+                                $append = $append." ORDER BY likes DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
+                                break;
+                            case "mostViewed":
+                                $append = $append." ORDER BY views DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostViewed'));
+                                break;
+                            case "mostDownloads":
+                                $append = $append." ORDER BY downloads DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostDownloads'));
+                                break;
+                            default:
+                                $append = $append." ORDER BY likes DESC";
+                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
+                                break;
+                        }
+                        if(isset($path[4])){
+                            $pageNumber = intval($path[4]);
+                            if(isset($path[5])){ $numberPerPage = intval($path[5]); }
+                        }
+                    }
                 }
-                $querySearch = $this->searchForResults($searchTerm);
+                if(!isset($path[3])){
+                    $append = $append." ORDER BY likes DESC";
+                }
+                $querySearch = $this->searchForResults($searchTerm, $append);
+                $variableArray = array_merge($variableArray, array('numResults' => $querySearch->num_rows));
                 if($querySearch!=false && $numberPerPage!=0){
                     $numberOfPages = ceil($querySearch->num_rows/$numberPerPage);
                     $resultData = $this->getResults($querySearch, $numberPerPage, $pageNumber);
@@ -336,7 +405,7 @@ class ScriptRepo{
                     $start = $pageNumber-2;
                 }
                 if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
-                $variableArray = array(
+                $variableArray = array_merge($variableArray, array(
                     'resultPageNumber' => $pageNumber,
                     'resultsPerPage' => $numberPerPage,
                     'resultPages' => $resultPages,
@@ -345,14 +414,26 @@ class ScriptRepo{
                     'resultArray' => $resultData,
                     'likesArray' => $likesArray,
                     'activePage' => 'browse'
-                );
+                ));
                 break;
             case 'admin':
                 if(!$this->loggedIn || !$this->admin){
                     $_SESSION['loginInfo'] = 'You must be logged in to do that!';
                     $this->redirect('login');
                 }
+                $flagQuery = $this->queryDatabase("SELECT * FROM repo_flags");
+                $flagArray = array();
+                while($row = $flagQuery->fetch_assoc()){
+                    $count = count($flagArray);
+                    $flagArray[$count] = $row;
+                    if($row['type']==2){
+                        $anotherQuery = $this->queryDatabase("SELECT * FROM repo_comments WHERE id='".$row['flaggedID']."'");
+                        $anotherRow = $anotherQuery->fetch_assoc();
+                        $flagArray[$count]['flaggedID'] = $anotherRow['entryID'];
+                    }
+                }
                 $variableArray = array(
+                    'flagArray' => $flagArray,
                     'activePage' => 'admin',
                     'output' => 'admin.tpl'
                 );
@@ -427,6 +508,7 @@ class ScriptRepo{
                     $browseQuery = $browseQuery." ORDER BY likes DESC";
                 }
                 $queryBrowse = $this->queryDatabase($browseQuery);
+                $variableArray = array_merge($variableArray, array('numResults' => $queryBrowse->num_rows));
                 if($queryBrowse!=false){
                     $numberOfPages = ceil($queryBrowse->num_rows/$numberPerPage);
                     $resultData = $this->getResults($queryBrowse, $numberPerPage, $pageNumber);
@@ -526,23 +608,29 @@ class ScriptRepo{
                 if($userQuery->num_rows!=1){
                     $variableArray = array('output' => '404.tpl');
                 }else{
-                    $user = $this->databaseHandle->real_escape_string($path[1]);
                     $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
+                    $userRow = $userQuery->fetch_assoc();
                     $likesArray = array();
                     while($row = $queryLikes->fetch_assoc()){
                         if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
                         $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
                     }
-                    $scriptQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE author='$user'");
+                    $scriptQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE author='$userToLookup'");
                     $scriptArray = array();
                     while($row = $scriptQuery->fetch_assoc()){
                         $scriptArray[count($scriptArray)] = $row;
                     }
+                    $likeQuery = $this->queryDatabase("SELECT id FROM repo_likes WHERE author='$userToLookup'");
+                    $commentQuery = $this->queryDatabase("SELECT id FROM repo_comments WHERE author='$userToLookup'");
                     $variableArray = array(
                         'likesArray' => $likesArray,
                         'resultArray' => $scriptArray,
                         'usernameForPage' => $userToLookup,
-                        'output' => 'userpage.tpl'
+                        'output' => 'userpage.tpl',
+                        'scriptsPosted' => count($scriptArray),
+                        'commentsAdded' => $commentQuery->num_rows,
+                        'scriptsLiked' => $likeQuery->num_rows,
+                        'user' => $userRow
                     );
                 }
                 break;
@@ -561,7 +649,6 @@ class ScriptRepo{
                     $this->redirect('login');
                 }
                 $user = $this->username;
-                var_dump($path);
                 if(in_array($path[1], array('1', '4', '5'))){
                     $pubID = $this->databaseHandle->real_escape_string($path[2]);
                     $existQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
@@ -580,6 +667,7 @@ class ScriptRepo{
                         $queryLike = $this->queryDatabase("SELECT * FROM repo_likes WHERE pubID='$pubID' AND author='$user'");
                         if($queryLike->num_rows==0){
                             $existRow = $existQuery->fetch_assoc();
+                            if(!isset($existRow)){ $existRow=0; }
                             $this->queryDatabase("UPDATE repo_entries SET likes='".($existRow+1)."' WHERE pubID='$pubID'");
                             $this->queryDatabase("INSERT INTO repo_likes (id, pubID, author) VALUES ('NULL', '$pubID', '$user')");
                             $_SESSION['viewSuccess'] = "You have successfully liked this script.";
@@ -734,7 +822,7 @@ class ScriptRepo{
             );
         }else{
             $pass = $this->bCrypt->hash($postData['password']);
-            $this->queryDatabase("INSERT INTO repo_users (id, username, password, email, timezone, status, staff) VALUES ('NULL', '$user', '$pass', '$email', 'America/New_York', '0', false)");
+            $this->queryDatabase("INSERT INTO repo_users (id, username, password, email, status, staff) VALUES ('NULL', '$user', '$pass', '$email', '0', false)");
             $mailer = new Mailer();
             $mailer->sendConfirmationEmail($email, $user);
             return array( 'registerSuccess' => true );
@@ -855,10 +943,10 @@ class ScriptRepo{
         }
         return $outputArray;
     }
-    public function searchForResults($query, $args=array()){
+    public function searchForResults($query, $append="", $args=array()){
         $args = $args; // Disabled for now. Not sure how to handle it without making 16 fulltext indexes :/
         $queryTerm = $this->databaseHandle->real_escape_string($query);
-        $queryString = "SELECT * FROM repo_entries WHERE MATCH (name,author,description,tags) AGAINST('$queryTerm')";
+        $queryString = "SELECT * FROM repo_entries WHERE MATCH (name,author,description,tags) AGAINST('$queryTerm' IN BOOLEAN MODE)".$append;
         $queryResult = $this->queryDatabase($queryString);
         return $queryResult;
     }
