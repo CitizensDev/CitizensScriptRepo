@@ -5,9 +5,9 @@ require_once('assets/bcrypt.php');
 require_once('password.php');
 class ScriptRepoAPI extends ScriptRepo{
     public $data = array();
-    public function __construct($args){
+    public function __construct(){
         $this->populateVariables();
-        $this->handleArgs($args);
+        $this->handleArgs($_GET);
         $this->outputData();
     }
     public function handleArgs($args){
@@ -117,5 +117,5 @@ class ScriptRepoAPI extends ScriptRepo{
         }
     }
 }
-new ScriptRepoAPI($_GET);
+new ScriptRepoAPI();
 ?>
