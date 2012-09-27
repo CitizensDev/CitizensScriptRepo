@@ -667,8 +667,7 @@ class ScriptRepo{
                         $queryLike = $this->queryDatabase("SELECT * FROM repo_likes WHERE pubID='$pubID' AND author='$user'");
                         if($queryLike->num_rows==0){
                             $existRow = $existQuery->fetch_assoc();
-                            if(!isset($existRow)){ $existRow=0; }
-                            $this->queryDatabase("UPDATE repo_entries SET likes='".($existRow+1)."' WHERE pubID='$pubID'");
+                            $this->queryDatabase("UPDATE repo_entries SET likes='".($existRow['likes']+1)."' WHERE pubID='$pubID'");
                             $this->queryDatabase("INSERT INTO repo_likes (id, pubID, author) VALUES ('NULL', '$pubID', '$user')");
                             $_SESSION['viewSuccess'] = "You have successfully liked this script.";
                         }
