@@ -31,11 +31,19 @@
             {if $sortType!="mostViewed"}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/mostViewed/{$resultPageNumber}/{$resultsPerPage}/">Sort by number of views</a></li>{/if}
             {if $sortType!="mostDownloads"}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/mostDownloads/{$resultPageNumber}/{$resultsPerPage}/">Sort by number of downloads</a></li>{/if}
         </ul>
+    </div><br>
+    <div class="btn-group">
+        <a class="btn dropdown-toggle" data-toggle="dropdown">{if $resultsPerPage==20}20 results per page.{elseif $resultsPerPage==50}50 results per page.{elseif $resultsPerPage==100}100 results per page.{elseif $resultsPerPage==200}200 results per page.{/if} <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            {if $resultsPerPage!=20}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/1/20/">Show 20 results per page</a></li>{/if}
+            {if $resultsPerPage!=50}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/1/50/">Show 50 results per page</a></li>{/if}
+            {if $resultsPerPage!=100}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/1/100/">Show 100 results per page</a></li>{/if}
+            {if $resultsPerPage!=200}<li><a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/1/200/">Show 200 results per page</a></li>{/if}
+        </ul>
     </div>
 </div>
 <!-- Navigation -->
-<div id="navigation" style="text-align:center;">
-    Results per page: {if $resultsPerPage!=20}<a href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/{$resultPageNumber}/20">{/if}20{if $resultsPerPage!=20}</a>{/if}, {if $resultsPerPage!=50}<a  href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/{$resultPageNumber}/50">{/if}50{if $resultsPerPage!=50}</a>{/if}, {if $resultsPerPage!=100}<a  href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/{$resultPageNumber}/100">{/if}100{if $resultsPerPage!=100}</a>{/if}, {if $resultsPerPage!=200}<a  href="{buildURL page='search/'}{$searchTermURL}/{$listingType}/{$sortType}/{$resultPageNumber}/200">{/if}200{if $resultsPerPage!=200}</a>{/if}
+<div class="span11" id="navigation" style="text-align:center;padding-bottom:12px">
     <div class="pagination pagination-centered">
         <ul>
             {if $resultPageNumber==1}<li class="disabled"><a>Prev</a></li>

@@ -83,6 +83,16 @@ class ScriptRepoAPI extends ScriptRepo{
                     $this->data = array('success' => false);
                 }
                 break;
+            case isset($args['download'])&&isset($args['pubID']):
+                $pubID = $this->databaseHandle->real_escape_string($args['pubID']);
+                $queryExist = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
+                if($queryExist->num_rows==1){
+                    $existRow = $queryExist->fetch_assoc();
+                    $this->data = array('success' => true, 'code' => $existRow['code']);
+                }else{
+                    $this->data = array('success' => false);
+                }
+                break;
             default:
                 $this->data = array('success' => false);
         }

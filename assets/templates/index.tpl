@@ -85,12 +85,12 @@
               </div><!-- /navbar-inner -->
             </div><!-- /navbar -->
         </section>
-        <div class="container">
+        <div class="container container-fluid">
             <div class="alert alert-info">
                 <strong>Notice!</strong> This site is the Citizens Script Repo v2.1 - Searching works :D
             </div>
             {include file="$output"}
-            <footer class="footer">
+            <footer class="footer span11">
                 <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="{buildURL page='support'}">Support</a> - <a href="{buildURL page='credits'}">Credits</a></div>
             </footer>
         </div>

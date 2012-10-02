@@ -13,7 +13,7 @@
         {if $ScriptRepo->loggedIn}{if $ScriptRepo->admin}<button onclick='document.location.href="{buildURL page='action/4/'}{$dataToUse.pubID}"' rel="tooltip" title="Delete" class="btn btn-danger"><i class="icon-remove"></i></button>{/if}{/if} 
         <button onclick='document.location.href="{buildURL page='action/5/'}{$dataToUse.pubID}"' rel="tooltip" title="Report" class="btn btn-warning"><i class="icon-flag"></i></button> 
     </span>
-        <b>Description: </b>{nl2br($dataToUse.description)}<br><br>
+        <b>Description: </b>{$dataToUse.description}<br><br>
     <pre class="brush: {if $dataToUse.scriptType==1}js{else}yaml{/if}">{$code}</pre>
     <script type="text/javascript">
         SyntaxHighlighter.all()

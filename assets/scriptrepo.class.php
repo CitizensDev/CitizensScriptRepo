@@ -259,7 +259,8 @@ class ScriptRepo{
                     'typeError' => false,
                     'tagError' => false,
                     'tags' => false,
-                    'name' => false
+                    'name' => false,
+                    'output' => 'post.tpl'
                 );
                 if(!$_SESSION['loggedIn']){
                     $_SESSION['loginInfo'] = 'You must be logged in to edit scripts!';
@@ -278,7 +279,7 @@ class ScriptRepo{
                         $variableArray = array_merge($variableArray, $editSuccess);
                     }
                 }else{
-                    $queryCode = $connectionHandle->query("SELECT * FROM repo_code WHERE pubID='$pubID'");
+                    $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
                     $rowCode = $queryCode->fetch_assoc();
                     $variableArray = array_merge($variableArray, array(
                         'name' => $checkRow['name'],
@@ -599,10 +600,6 @@ class ScriptRepo{
                 }
                 break;
             case 'user':
-                if(!$_SESSION['loggedIn']){
-                    $_SESSION['loginInfo'] = 'You must be logged in to view user profiles!';
-                    $this->redirect('login');
-                }
                 $userToLookup = $this->databaseHandle->real_escape_string($path[1]);
                 $userQuery = $this->queryDatabase("SELECT * FROM repo_users WHERE username='$userToLookup'");
                 if($userQuery->num_rows!=1){
