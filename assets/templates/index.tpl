@@ -87,7 +87,7 @@
         </section>
         <div class="container container-fluid">
             <div class="alert alert-info">
-                <strong>Notice!</strong> This site is the Citizens Script Repo v2.1 - Searching works :D
+                <strong>Notice!</strong> This site is the Citizens Script Repo v3.0 - Omg so many rewrites... 
             </div>
             {include file="$output"}
             <footer class="footer span11">

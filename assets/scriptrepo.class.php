@@ -1,13 +1,16 @@
 <?php
 
 class ScriptRepo{
-    public $mainSite = 'http://scripts.citizensnpcs.com/';
+    public $mainSite = 'http://beta.scripts.citizensnpcs.com/';
+    public $rootDir = '/usr/share/nginx/www/scripts2/';
     public $loggedIn = false;
     public $admin = false;
     public $bCrypt;
     public $username;
     public $databaseHandle;
     public $ayah;
+    public $maintenenceMode=false; // Maintenence mode.
+    public $llMaintenence=false; // Low level (no DB and therefore no login checks) maintenence mode.
     protected $smarty;
     public function __construct(){
         $this->initSmarty();
@@ -16,19 +19,24 @@ class ScriptRepo{
         $_SERVER['REQUEST_URI_PATH'] = preg_replace('/\?.*/', '', $_SERVER['REQUEST_URI']);
         $path = explode('/', trim($_SERVER['REQUEST_URI_PATH'], '/'));
         array_shift($_GET);
+        if($this->llMaintenence){
+            die("We're sorry, but the site is in maintenence right now. Please try again later.");
+        }
         $this->handlePage($path);
     }
     public function populateVariables(){
         require('password.php');
         $this->databaseHandle = new mysqli('localhost', 'repo', $password, 'ScriptRepo');
         $this->bCrypt = new Bcrypt(12);
+        require_once('pages.class.php');
+        $this->pageHandle = new Pages();
     }
     public function initSmarty(){
         $this->smarty = new Smarty;
-        $this->smarty->setTemplateDir('/usr/share/nginx/www/scripts/assets/templates');
-        $this->smarty->setCompileDir('/usr/share/nginx/www/scripts/assets/Smarty/templates_c');
-        $this->smarty->setCacheDir('/usr/share/nginx/www/scripts/assets/Smarty/cache');
-        $this->smarty->setConfigDir('/usr/share/nginx/www/scripts/assets/Smarty/configs');
+        $this->smarty->setTemplateDir($this->rootDir.'assets/templates');
+        $this->smarty->setCompileDir($this->rootDir.'assets/Smarty/templates_c');
+        $this->smarty->setCacheDir($this->rootDir.'assets/Smarty/cache');
+        $this->smarty->setConfigDir($this->rootDir.'assets/Smarty/configs');
         $this->smarty->assign('ScriptRepo', $this);
     }
     public function webStuff(){
@@ -64,656 +72,82 @@ class ScriptRepo{
         $this->smarty->display('index.tpl');
     }
     public function getVariables($path){
-        $variableArray = array();
+        $this->pageHandle->mainClass = $this;
+        $this->pageHandle->path = $path;
+        /*if($this->maintenenceMode){
+            if(!$this->loggedIn){
+                $_SESSION['loginError'] = 'The site is in maintenence mode. If you are staff, please log in.';
+                $this->redirect('login');
+            }
+        } */ // Future maintenence mode stuff
         switch($path[0]){
             case 'credits':
-                $variableArray = array('output' => 'credits.tpl');
+                $this->pageHandle->credits();
                 break;
             case 'download':
-                $pubID = $this->databaseHandle->real_escape_string(strtolower($path[1]));
-                $queryView = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                if($queryView->num_rows==0){
-                    $variableArray = array('output' => '404.tpl');
-                }else{
-                    $row = $queryView->fetch_assoc();
-                    $newCount = $row['downloads']+1;
-                    $this->queryDatabase("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
-                    $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
-                    $rowCode = $queryCode->fetch_assoc();
-                    header('Content-Description: File Transfer');
-                    header('Content-Type: application/octet-stream');
-                    header('Content-Disposition: attachment; filename=script.yml');
-                    header('Content-Transfer-Encoding: binary');
-                    header('Expires: 0');
-                    header('Cache-Control: must-revalidate');
-                    header('Pragma: public');
-                    header('Content-Type: application/octet-stream');
-                    echo $rowCode['code'];
-                    exit;
-                }
+                $this->pageHandle->download();
                 break;
             case 'raw':
-                $pubID = $this->databaseHandle->real_escape_string(strtolower($path[1]));
-                $queryView = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                if($queryView->num_rows==0){
-                    $variableArray = array('output' => '404.tpl');
-                }else{
-                    $row = $queryView->fetch_assoc();
-                    $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
-                    $rowCode = $queryCode->fetch_assoc();
-                    $newCount = $row['downloads']+1;
-                    $this->queryDatabase("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
-                    echo "<html><body><pre>".htmlspecialchars($rowCode['code'])."</pre></body></html";
-                    exit;
-                }
+                $this->pageHandle->raw();
                 break;
             case 'login':
-                $newArray = array(
-                    'loginError' => false,
-                    'loginMessage' => false,
-                    'passwordError' => false,
-                    'userError' => false,
-                    'loginInfo' => false,
-                    'username' => false,
-                    'activePage' => 'login.',
-                    'output' => 'login.tpl'
-                );
-                $variableArray = array_merge($variableArray, $newArray);
-                if(isset($_SESSION['loginInfo'])){
-                    $variableArray = array_merge($variableArray, array('loginInfo' => $_SESSION['loginInfo']));
-                    unset($_SESSION['loginInfo']);
-                }
-                if(isset($_SESSION['loginMessage'])){
-                    $variableArray = array_merge($variableArray, array('loginMessage' => $_SESSION['loginMessage']));
-                    unset($_SESSION['loginMessage']);
-                }
-                if(isset($_POST['loginForm'])){
-                    $loginSuccessful = $this->loginUser($_POST['username'], $_POST['password']);
-                    if($loginSuccessful['loginSuccess']){
-                        $_SESSION['username'] = $this->databaseHandle->real_escape_string($_POST['username']);
-                        $_SESSION['loggedIn'] = true;
-                        $this->redirect('');
-                    }else{
-                        $variableArray = array_merge($variableArray, $loginSuccessful);
-                    }
-                }elseif($this->loggedIn){
-                    $this->redirect('user/'.$this->username);
-                }
+                $this->pageHandle->login();
                 break;
             case 'settings':
-                $variableArray = array(
-                    'output' => 'settings.tpl',
-                    'successMessage' => false,
-                );
-                if(!$this->loggedIn){
-                    $_SESSION['loginInfo'] = 'You must be logged in to change settings!';
-                    $this->redirect('login');
-                }
-                if(isset($_POST['Save'])){
-                    $variableArray = array_merge($variableArray, array('successMessage' => "Successfully updated your settings."));
-                }
+                $this->pageHandle->settings();
                 break;
             case 'logout':
-                session_destroy();
-                session_start();
-                $_SESSION['loginMessage'] = 'You have been successfully logged out.';
-                $this->redirect('login');
+                $this->pageHandle->logout();
                 break;
             case 'resendconfirmation':
-                $query = $this->queryDatabase("SELECT * FROM repo_users WHERE username='".$_SESSION['attemptedUsername']."'");
-                $row = $query->fetch_assoc();
-                $mailer = new Mailer();
-                $mailer->sendConfirmationEmail($row['email'], $_SESSION['attemptedUsername']);
-                $_SESSION['loginMessage'] = 'Confirmation email successfully sent to '.$row['email'].'!';
-                $this->redirect('login');
+                $this->pageHandle->resendconfirmation();
                 break;
             case 'register':
-                include('password.php');
-                $this->ayah = new AYAH($publisherKey, $scoringKey);
-                $variableArray = array(
-                    'activePage' => false,
-                    'username' => false,
-                    'email' => false,
-                    'registerError' => false,
-                    'usernameError' => false,
-                    'emailError' => false,
-                    'passwordError' => false,
-                    'ayahError' => false,
-                    'ayah' => $this->ayah->getPublisherHTML(),
-                    'output' => 'register.tpl'
-                );
-                if(isset($_POST['registerForm'])){
-                    $registrationArray = $this->registerUser($_POST);
-                    if($registrationArray['registerSuccess']){
-                        $_SESSION['loginMessage'] = 'You have now been registered, but must confirm your email before you can login.';
-                        $this->redirect('login');
-                    }else{
-                        $variableArray = array_merge($variableArray, $registrationArray);
-                    }
-                }
+                $this->pageHandle->register();
                 break;
             case 'post':
-                $variableArray = array(
-                    'activePage' => 'post',
-                    'output' => 'post.tpl',
-                    'postError' => false,
-                    'scriptError' => false,
-                    'scriptCode' => false,
-                    'description' => false,
-                    'descriptionError' => false,
-                    'typeError' => false,
-                    'tagError' => false,
-                    'tags' => false,
-                    'name' => false,
-                    'nameError' => false,
-                    'buttonSelected' => 1
-                );
-                if(!$this->loggedIn){
-                    $_SESSION['loginInfo'] = 'You must be logged in to post new scripts!';
-                    $this->redirect('login');
-                }
-                if(isset($_POST['SubmitScript'])){
-                    $postSuccessful = $this->postScript($_POST);
-                    if($postSuccessful['postSuccess']){
-                        $this->redirect('view/'.$postSuccessful['newID']);
-                    }else{
-                        $variableArray = array_merge($variableArray, $postSuccessful);
-                    }
-                }
-                if(isset($path[1])){
-                    $idtoedit = $this->databaseHandle->real_escape_string($path[1]);
-                    $queryEdit = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$idtoedit'");
-                    if($queryEdit->num_rows==0){ $this->redirect('post'); }
-                    $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$idtoedit'");
-                    $rowCode = $queryCode->fetch_assoc();
-                    $row = $queryEdit->fetch_assoc();
-                    $variableArray = array_merge($variableArray, array(
-                        'name' => $row['name'],
-                        'scriptCode' => $rowCode['code'],
-                        'description' => $row['description'],
-                        'tags' => $row['tags']
-                    ));
-                }
+                $this->pageHandle->post();
                 break;
             case 'verify':
-                $user = $this->databaseHandle->real_escape_string($path[1]);
-                $query = $this->queryDatabase("SELECT * FROM repo_users WHERE username='$user' AND status=0");
-                if(!isset($path[1]) || !isset($path[2]) || $path[2]!=md5($path[1]) || $query->num_rows===0){
-                    // Something's wrong.
-                    $this->redirect('');
-                }else{
-                    // Verify user
-                    $this->queryDatabase("UPDATE repo_users SET status=1 WHERE username='$user'");
-                    $_SESSION['loginMessage'] = 'You have successfully confirmed your email. You may now log in.';
-                    $this->redirect('login');
-                }
+                $this->pageHandle->verify();
                 break;
             case 'edit':
-                $variableArray = array(
-                    'postError' => false,
-                    'nameError' => false,
-                    'scriptError' => false,
-                    'scriptCode' => false,
-                    'description' => false,
-                    'descriptionError' => false,
-                    'typeError' => false,
-                    'tagError' => false,
-                    'tags' => false,
-                    'name' => false,
-                    'output' => 'post.tpl'
-                );
-                if(!$_SESSION['loggedIn']){
-                    $_SESSION['loginInfo'] = 'You must be logged in to edit scripts!';
-                    $this->redirect('login');
-                }
-                $pubID = $this->databaseHandle->real_escape_string($path[1]);
-                $queryCheck = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                if($queryCheck->num_rows==0){ $this->redirect(''); }
-                $checkRow = $queryCheck->fetch_assoc();
-                if($checkRow['author']!=$this->username && !$this->admin){ $this->redirect('post/'.$pubID); }
-                if(isset($_POST['SubmitScript'])){
-                    $editSuccess = $this->postScript($_POST, $pubID);
-                    if($editSuccess['postSuccess']){
-                        $this->redirect('view/'.$editSuccess['newID']);
-                    }else{
-                        $variableArray = array_merge($variableArray, $editSuccess);
-                    }
-                }else{
-                    $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
-                    $rowCode = $queryCode->fetch_assoc();
-                    $variableArray = array_merge($variableArray, array(
-                        'name' => $checkRow['name'],
-                        'scriptCode' => $rowCode['code'],
-                        'description' => $checkRow['description'],
-                        'tags' => $checkRow['tags']
-                    ));
-                }
+                $this->pageHandle->edit();
                 break;
             case 'myscripts':
-                if(!$_SESSION['loggedIn']){
-                    $_SESSION['loginInfo'] = 'You must be logged in to edit scripts!';
-                    $this->redirect('login');
-                }
-                $user = $this->username;
-                $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
-                $likesArray = array();
-                while($row = $queryLikes->fetch_assoc()){
-                    if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
-                    $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
-                }
-                $scriptQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE author='$user'");
-                $scriptArray = array();
-                while($row = $scriptQuery->fetch_assoc()){
-                    $scriptArray[count($scriptArray)] = $row;
-                }
-                $variableArray = array(
-                    'activePage' => false,
-                    'output' => 'myscripts.tpl',
-                    'resultArray' => $scriptArray,
-                    'likesArray' => $likesArray
-                );
+                $this->pageHandle->myscripts();
                 break;
             case 'search':
-                if(!isset($path[1])){ $path[1] = null; } // Stop an undefined offset.
-                $searchTerm = $this->databaseHandle->real_escape_string(urldecode($path[1]));
-                $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
-                $likesArray = array();
-                while($row = $queryLikes->fetch_assoc()){
-                    if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
-                    $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
-                }
-                $numberPerPage = 20;
-                $pageNumber = 1;
-                $resultPages = array(1, 2, 3, 4, 5);
-                $append = "";
-                $variableArray = array(
-                    'listingType' => 'all',
-                    'sortType' => 'mostLiked',
-                    'searchTerm' => htmlspecialchars($searchTerm),
-                    'searchTermURL' => str_replace(" ", "+", $searchTerm)
-                );
-                // Get the page number and number of results per page.
-                if(isset($path[2])){
-                    $typeOfSearch = $path[2];
-                    switch($typeOfSearch){
-                        case NULL:
-                        case "":
-                        case "all":
-                            break;
-                        case "citizen":
-                        case "citizens":
-                            $append = $append." AND scriptType=1";
-                            $variableArray = array_merge($variableArray, array('listingType' => 'citizens'));
-                            break;
-                        case "denizen":
-                        case "denizens":
-                            $append = $append." AND scriptType=2";
-                            $variableArray = array_merge($variableArray, array('listingType' => 'denizens'));
-                            break;
-                    }
-                    if(isset($path[3])){
-                        $sort = $path[3];
-                        switch($sort){
-                            case "newest":
-                                $append = $append." ORDER BY timestamp DESC";
-                                break;
-                            case "oldest":
-                                $append = $append." ORDER BY timestamp ASC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'oldest'));
-                                break;
-                            case "mostLiked":
-                                $append = $append." ORDER BY likes DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
-                                break;
-                            case "mostViewed":
-                                $append = $append." ORDER BY views DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostViewed'));
-                                break;
-                            case "mostDownloads":
-                                $append = $append." ORDER BY downloads DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostDownloads'));
-                                break;
-                            default:
-                                $append = $append." ORDER BY likes DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
-                                break;
-                        }
-                        if(isset($path[4])){
-                            $pageNumber = intval($path[4]);
-                            if(isset($path[5])){ $numberPerPage = intval($path[5]); }
-                        }
-                    }
-                }
-                if(!isset($path[3])){
-                    $append = $append." ORDER BY likes DESC";
-                }
-                $querySearch = $this->searchForResults($searchTerm, $append);
-                $variableArray = array_merge($variableArray, array('numResults' => $querySearch->num_rows));
-                if($querySearch!=false && $numberPerPage!=0){
-                    $numberOfPages = ceil($querySearch->num_rows/$numberPerPage);
-                    $resultData = $this->getResults($querySearch, $numberPerPage, $pageNumber);
-                }else{
-                    $numberOfPages = 0;
-                }
-                if($numberOfPages<5){
-                    $limit = $numberOfPages;
-                    $start = 1;
-                }elseif($pageNumber+2>$numberOfPages){
-                    $limit = $numberOfPages;
-                    $start = $pageNumber-(4-($numberOfPages-$pageNumber));
-                }else{
-                    $limit = $pageNumber+2;
-                    $start = $pageNumber-2;
-                }
-                if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
-                $variableArray = array_merge($variableArray, array(
-                    'resultPageNumber' => $pageNumber,
-                    'resultsPerPage' => $numberPerPage,
-                    'resultPages' => $resultPages,
-                    'searchQuery' => $searchTerm,
-                    'output' => 'result.tpl',
-                    'resultArray' => $resultData,
-                    'likesArray' => $likesArray,
-                    'activePage' => 'browse'
-                ));
+                $this->pageHandle->search();
                 break;
             case 'admin':
-                if(!$this->loggedIn || !$this->admin){
-                    $_SESSION['loginInfo'] = 'You must be logged in to do that!';
-                    $this->redirect('login');
-                }
-                $flagQuery = $this->queryDatabase("SELECT * FROM repo_flags");
-                $flagArray = array();
-                while($row = $flagQuery->fetch_assoc()){
-                    $count = count($flagArray);
-                    $flagArray[$count] = $row;
-                    if($row['type']==2){
-                        $anotherQuery = $this->queryDatabase("SELECT * FROM repo_comments WHERE id='".$row['flaggedID']."'");
-                        $anotherRow = $anotherQuery->fetch_assoc();
-                        $flagArray[$count]['flaggedID'] = $anotherRow['entryID'];
-                    }
-                }
-                $variableArray = array(
-                    'flagArray' => $flagArray,
-                    'activePage' => 'admin',
-                    'output' => 'admin.tpl'
-                );
+                $this->pageHandle->admin();
                 break;
             case 'support':
-                $variableArray = array('output' => 'support.tpl');
+                $this->pageHandle->support();
                 break;
             case 'browse':
-                $variableArray = array(
-                    'activePage' => 'browse',
-                    'output' => 'browse.tpl',
-                    'listingType' => 'all',
-                    'sortType' => 'mostLiked'
-                );
-                $browseQuery = "SELECT * FROM repo_entries WHERE privacy=1";
-                $numberPerPage = 20;
-                $pageNumber = 1;
-                $resultPages = array(1, 2, 3, 4, 5);
-                // Get the page number and number of results per page.
-                if(isset($path[1])){
-                    $typeOfSearch = $path[1];
-                    switch($typeOfSearch){
-                        case NULL:
-                        case "":
-                        case "all":
-                            break;
-                        case "citizen":
-                        case "citizens":
-                            $browseQuery = $browseQuery." AND scriptType=1";
-                            $variableArray = array_merge($variableArray, array('listingType' => 'citizens'));
-                            break;
-                        case "denizen":
-                        case "denizens":
-                            $browseQuery = $browseQuery." AND scriptType=2";
-                            $variableArray = array_merge($variableArray, array('listingType' => 'denizens'));
-                            break;
-                    }
-                    if(isset($path[2])){
-                        $sort = $path[2];
-                        switch($sort){
-                            case "newest":
-                                $browseQuery = $browseQuery." ORDER BY timestamp DESC";
-                                break;
-                            case "oldest":
-                                $browseQuery = $browseQuery." ORDER BY timestamp ASC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'oldest'));
-                                break;
-                            case "mostLiked":
-                                $browseQuery = $browseQuery." ORDER BY likes DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
-                                break;
-                            case "mostViewed":
-                                $browseQuery = $browseQuery." ORDER BY views DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostViewed'));
-                                break;
-                            case "mostDownloads":
-                                $browseQuery = $browseQuery." ORDER BY downloads DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostDownloads'));
-                                break;
-                            default:
-                                $browseQuery = $browseQuery." ORDER BY likes DESC";
-                                $variableArray = array_merge($variableArray, array('sortType' => 'mostLiked'));
-                                break;
-                        }
-                        if(isset($path[3])){
-                            $pageNumber = intval($path[3]);
-                            if(isset($path[4])){ $numberPerPage = intval($path[4]); }
-                        }
-                    }
-                }
-                if(!isset($path[2])){
-                    $browseQuery = $browseQuery." ORDER BY likes DESC";
-                }
-                $queryBrowse = $this->queryDatabase($browseQuery);
-                $variableArray = array_merge($variableArray, array('numResults' => $queryBrowse->num_rows));
-                if($queryBrowse!=false){
-                    $numberOfPages = ceil($queryBrowse->num_rows/$numberPerPage);
-                    $resultData = $this->getResults($queryBrowse, $numberPerPage, $pageNumber);
-                    $variableArray = array_merge($variableArray, array('resultArray' => $resultData));
-                }
-                if($numberOfPages<5){
-                    $limit = $numberOfPages;
-                    $start = 1;
-                }elseif($pageNumber+2>$numberOfPages){
-                    $limit = $numberOfPages;
-                    $start = $pageNumber-(4-($numberOfPages-$pageNumber));
-                }else{
-                    $limit = $pageNumber+2;
-                    $start = $pageNumber-2;
-                }
-                if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
-                $queryUsers = $this->queryDatabase("SELECT * FROM repo_users ORDER BY staff DESC, username");
-                if($queryUsers!=false){ $userArray = $this->getResults($queryUsers, $numberPerPage, $pageNumber); }
-                $variableArray = array_merge($variableArray, array(
-                    'resultPageNumber' => $pageNumber,
-                    'resultsPerPage' => $numberPerPage,
-                    'resultPages' => $resultPages,
-                    'userArray' => $userArray
-                ));
+                $this->pageHandle->browse();
                 break;
             case 'view':
-                $pubID = $this->databaseHandle->real_escape_string(strtolower($path[1]));
-                $variableArray = array(
-                    'commentField' => false,
-                    'viewFailure' => false,
-                    'viewSuccess' => false,
-                    'output' => 'view.tpl',
-                    'activePage' => 'view'
-                );
-                if(isset($_SESSION['viewSuccess'])){
-                    $variableArray = array_merge($variableArray, array('viewSuccess' => $_SESSION['viewSuccess']));
-                    unset($_SESSION['viewSuccess']);
-                }
-                if(isset($_SESSION['viewFailure'])){
-                    $variableArray = array_merge($variableArray, array('viewFailure' => $_SESSION['viewFailure']));
-                    unset($_SESSION['viewFailure']);
-                }
-                $user = $this->username;
-                $query = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
-                if($query->num_rows==0 && false){
-                    $variableArray = array('output' => '404.tpl');
-                }else{
-                    if(isset($_POST['commentField'])){
-                        if(!$this->loggedIn){
-                            $_SESSION['loginInfo'] = 'You must be logged in to comment on scripts!';
-                            $this->redirect('login');
-                        }
-                        $commentField = $this->databaseHandle->real_escape_string($_POST['commentField']);
-                        if(strlen($commentField)<5){
-                            $variableArray = array_merge($variableArray, array(
-                                'viewFailure' => 'Please don\'t spam. Comments must be longer than 5 characters.',
-                                'commentField' => $commentField
-                            ));
-                        }else{
-                            $this->queryDatabase("INSERT INTO repo_comments (id, entryID, author, timestamp, content) VALUES ('NULL', '$pubID', '$user', now(), '$commentField')");
-                            $variableArray = array_merge($variableArray, array( 'viewSuccess' => 'Your comment has been posted.' ));
-                        }
-                    }
-                    $queryComments = $this->queryDatabase("SELECT * FROM repo_comments WHERE entryID='$pubID'");
-                    $commentData = array();
-                    while($row = $queryComments->fetch_assoc()){
-                        $commentData[count($commentData)] = $row;
-                    }
-                    $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes WHERE pubID='$pubID'");
-                    $liked = false;
-                    while($row = $queryLikes->fetch_assoc()){
-                        if($this->loggedIn){ if($row['author']==$this->username){ $liked = true; } }
-                    }
-                    $data = $query->fetch_assoc();
-                    $code = $queryCode->fetch_assoc();
-                    $newviews = $data['views']+1;
-                    $this->queryDatabase("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
-                    $variableArray = array_merge($variableArray, array(
-                        'likes' => $queryLikes->num_rows,
-                        'liked' => $liked,
-                        'dataToUse' => $data,
-                        'dateCreated' => date('Y-m-d\TH:i:sO', $data['timestamp']),
-                        'dateEdited' => date('Y-m-d\TH:i:sO', $data['edited']),
-                        'code' => str_replace('<', '&lt;', $code['code']),
-                        'commentData' => $commentData
-                    ));
-                }
+                $this->pageHandle->view();
                 break;
             case 'user':
-                $userToLookup = $this->databaseHandle->real_escape_string($path[1]);
-                $userQuery = $this->queryDatabase("SELECT * FROM repo_users WHERE username='$userToLookup'");
-                if($userQuery->num_rows!=1){
-                    $variableArray = array('output' => '404.tpl');
-                }else{
-                    $queryLikes = $this->queryDatabase("SELECT * FROM repo_likes");
-                    $userRow = $userQuery->fetch_assoc();
-                    $likesArray = array();
-                    while($row = $queryLikes->fetch_assoc()){
-                        if(!isset($likesArray[$row['pubID']])){ $likesArray[$row['pubID']] = 0; }
-                        $likesArray[$row['pubID']] = $likesArray[$row['pubID']]+1;
-                    }
-                    $scriptQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE author='$userToLookup'");
-                    $scriptArray = array();
-                    while($row = $scriptQuery->fetch_assoc()){
-                        $scriptArray[count($scriptArray)] = $row;
-                    }
-                    $likeQuery = $this->queryDatabase("SELECT id FROM repo_likes WHERE author='$userToLookup'");
-                    $commentQuery = $this->queryDatabase("SELECT id FROM repo_comments WHERE author='$userToLookup'");
-                    $variableArray = array(
-                        'likesArray' => $likesArray,
-                        'resultArray' => $scriptArray,
-                        'usernameForPage' => $userToLookup,
-                        'output' => 'userpage.tpl',
-                        'scriptsPosted' => count($scriptArray),
-                        'commentsAdded' => $commentQuery->num_rows,
-                        'scriptsLiked' => $likeQuery->num_rows,
-                        'user' => $userRow
-                    );
-                }
+                $this->pageHandle->user();
                 break;
             case 'index':
             case '':
             case 'home':
-                $variableArray = array('output' => 'home.tpl', 'activePage' => 'home');
+                $this->pageHandle->home();
                 break;
             case 'action':
-                if(!isset($path[2])){
-                    $this->redirect('');
-                }
-                if(!$this->loggedIn){
-                    // If they submitted a comment without being logged in, reject it.
-                    $_SESSION['loginInfo'] = 'You must be logged in to do that!';
-                    $this->redirect('login');
-                }
-                $user = $this->username;
-                if(in_array($path[1], array('1', '4', '5'))){
-                    $pubID = $this->databaseHandle->real_escape_string($path[2]);
-                    $existQuery = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                    if($existQuery->num_rows==0){
-                        $this->redirect('');
-                    }
-                }elseif($path[1]=="6"){
-                    $commentID = $this->databaseHandle->real_escape_string($path[2]);
-                    $existComment = $this->queryDatabase("SELECT * FROM repo_comments WHERE id='$commentID'");
-                    if($existComment->num_rows==0){
-                        $this->redirect('');
-                    }
-                }
-                switch($path[1]){
-                    case '1':
-                        $queryLike = $this->queryDatabase("SELECT * FROM repo_likes WHERE pubID='$pubID' AND author='$user'");
-                        if($queryLike->num_rows==0){
-                            $existRow = $existQuery->fetch_assoc();
-                            $this->queryDatabase("UPDATE repo_entries SET likes='".($existRow['likes']+1)."' WHERE pubID='$pubID'");
-                            $this->queryDatabase("INSERT INTO repo_likes (id, pubID, author) VALUES ('NULL', '$pubID', '$user')");
-                            $_SESSION['viewSuccess'] = "You have successfully liked this script.";
-                        }
-                        $this->redirect('view/'.$pubID);
-                        break;
-                    case '4':
-                        if(!$this->admin){
-                            $this->redirect('');
-                        }
-                        $queryDelete = $this->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
-                        if($queryDelete->num_rows!=0){
-                            $row = $queryDelete->fetch_assoc();
-                            $this->queryDatabase("INSERT INTO repo_entries_deleted (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '".$row['author']."', '".$row['name']."', '".$row['description']."', '".$row['tags']."', '".$row['privacy']."', '".$row['scriptType']."', '".$row['timestamp']."', '".$row['edited']."', '".$row['downloads']."', '".$row['views']."')");
-                            $this->queryDatabase("DELETE FROM repo_entries WHERE pubID='$pubID'");
-                            $queryCode = $this->queryDatabase("SELECT * FROM repo_code WHERE pubID='$pubID'");
-                            $rowCode = $queryCode->fetch_assoc();
-                            $this->queryDatabase("INSERT INTO repo_code_deleted (id, pubID, code) VALUES ('NULL', '$pubID', '".$rowCode['code']."')");
-                            $this->queryDatabase("DELETE FROM repo_code WHERE pubID='$pubID'");
-                        }
-                        $this->redirect('');
-                        break;
-                    case '5':
-                        $queryFlag = $this->queryDatabase("SELECT * FROM repo_flags WHERE type=1 AND flaggedID='$pubID' AND author='$user'");
-                        if($queryFlag->num_rows==0){
-                            $this->queryDatabase("INSERT INTO repo_flags (id, author, type, flaggedID) VALUES ('NULL', '$user', 1, '$pubID')");
-                            $_SESSION['viewSuccess'] = "You have successfully flagged this script.";
-                        }else{
-                            $_SESSION['viewFailure'] = "You have already flagged this script!";
-                        }
-                        $this->redirect('view/'.$pubID);
-                        break;
-                    case '6':
-                        $queryFlag = $this->queryDatabase("SELECT * FROM repo_flags WHERE type=2 AND flaggedID='$commentID' AND author='$user'");
-                        if($queryFlag->num_rows==0){
-                            $this->queryDatabase("INSERT INTO repo_flags (id, author, type, flaggedID) VALUES ('NULL', '$user', 2, '$commentID')");
-                            $_SESSION['viewSuccess'] = "You have successfully flagged this comment.";
-                        }else{
-                            $_SESSION['viewFailure'] = "You have already flagged this comment!";
-                        }
-                        $existRow = $existComment->fetch_assoc();
-                        $this->redirect('view/'.$existRow['entryID']);
-                        break;
-                }
+                $this->pageHandle->action();
                 break;
             default:
-                $variableArray = array('output' => '404.tpl');
+                $this->pageHandle->page404();
                 break;
         }
-        return $variableArray;
+        return $this->pageHandle->variableArray;
     }
     public function loginUser($username, $password){
         $username = $this->databaseHandle->real_escape_string($username);
@@ -946,7 +380,7 @@ class ScriptRepo{
         $queryResult = $this->queryDatabase($queryString);
         return $queryResult;
     }
-    private function redirect($newPage){
+    public function redirect($newPage){
         header("Location: ".$this->mainSite.$newPage);
         exit;
     }
