@@ -9,6 +9,7 @@ class ScriptRepo{
     public $username;
     public $databaseHandle;
     public $ayah;
+    public $logHandle;
     public $maintenenceMode=false; // Maintenence mode.
     public $llMaintenence=false; // Low level (no DB and therefore no login checks) maintenence mode.
     protected $smarty;
@@ -30,6 +31,7 @@ class ScriptRepo{
         $this->bCrypt = new Bcrypt(12);
         require_once('pages.class.php');
         $this->pageHandle = new Pages();
+        $this->logHandle = new Logger();
     }
     public function initSmarty(){
         $this->smarty = new Smarty;
@@ -73,6 +75,8 @@ class ScriptRepo{
     }
     public function getVariables($path){
         $this->pageHandle->mainClass = $this;
+        $this->pageHandle->logHandle = $this->logHandle;
+        if($this->loggedIn){ $this->logHandle->username = $this->username; }
         $this->pageHandle->path = $path;
         /*if($this->maintenenceMode){
             if(!$this->loggedIn){

@@ -2,8 +2,9 @@
 class Logger {
     private $accessHandle;
     private $errorHandle;
-    private $accessLog="/home/agentkid/logs/access.log";
-    private $errorLog="/home/agentkid/logs/error.log";
+    private $accessLog="/var/log/scriptrepo/access.log";
+    private $errorLog="/var/log/scriptrepo/error.log";
+    public $username;
     public function __construct(){
         $this->errorHandle = fopen($this->errorLog, "a");
         $this->accessHandle = fopen($this->accessLog, "a");
@@ -13,10 +14,12 @@ class Logger {
         fclose($this->accessHandle);
     }
     public function accessLog($message){
-        fwrite($this->accessHandle, $this->getPrefix().$message);
+        if(isset($this->username)){ $append = "$this->username - "; }else{ $append=null; }
+        fwrite($this->accessHandle, $this->getPrefix().$append.$message."\n");
     }
     public function errorLog($message){
-        fwrite($this->errorHandle, $this->getPrefix().$message);
+        if(isset($this->username)){ $append = "$this->username - "; }else{ $append=null; }
+        fwrite($this->errorHandle, $this->getPrefix().$append.$message."\n");
     }
     private function getPrefix(){
         return "[".date("Y-m-d H:i:s")."] ".$_SERVER['REMOTE_ADDR']." - ";

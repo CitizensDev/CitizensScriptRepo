@@ -10,6 +10,7 @@ require_once('assets/Smarty/Smarty.class.php');
 require_once('password.php');
 require_once('assets/bcrypt.php');
 require_once('assets/scriptrepo.class.php');
+require_once('assets/logger.class.php');
 
 // Initialize the ScriptRepo.
 new ScriptRepo();
