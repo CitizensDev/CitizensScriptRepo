@@ -9,3 +9,4 @@ password.php
 /assets/phpmailer/
 !/assets/geshi/yaml.php
 /assets/tiny_mce/
+/assets/syntaxhighlighter/

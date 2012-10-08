@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', '1'); // Error reporting on.
+ini_set('display_errors', '1'); // Error reporting on. 1153969719074
 session_start(); // Create a session.
 date_default_timezone_set('America/New_York'); // Set the timezone.
 
@@ -7,7 +7,6 @@ date_default_timezone_set('America/New_York'); // Set the timezone.
 require_once('assets/phpmailer/mail.php');
 require_once('assets/ayah.php');
 require_once('assets/Smarty/Smarty.class.php');
-require_once('password.php');
 require_once('assets/bcrypt.php');
 require_once('assets/scriptrepo.class.php');
 require_once('assets/logger.class.php');

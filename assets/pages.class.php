@@ -89,7 +89,7 @@ class Pages {
                         $this->variableArray = array_merge($this->variableArray, $loginSuccessful);
                     }
                 }elseif($this->mainClass->loggedIn){
-                    $this->mainClass->redirect('user/'.$this->username);
+                    $this->mainClass->redirect('user/'.$this->mainClass->username);
                 }
     }
     public function logout(){
@@ -246,7 +246,7 @@ class Pages {
         $queryCheck = $this->mainClass->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
         if($queryCheck->num_rows==0){ $this->mainClass->redirect(''); }
         $checkRow = $queryCheck->fetch_assoc();
-        if($checkRow['author']!=$this->username && !$this->admin){ $this->mainClass->redirect('post/'.$pubID); }
+        if($checkRow['author']!=$this->mainClass->username && !$this->mainClass->admin){ $this->mainClass->redirect('post/'.$pubID); }
         if(isset($_POST['SubmitScript'])){
             $editSuccess = $this->mainClass->postScript($_POST, $pubID);
             if($editSuccess['postSuccess']){
@@ -514,6 +514,18 @@ class Pages {
         if($numberOfPages!=0){ $resultPages = range($start, $limit); }else{ $resultPages = array(1); }
         $queryUsers = $this->mainClass->queryDatabase("SELECT * FROM repo_users ORDER BY staff DESC, username");
         if($queryUsers!=false){ $userArray = $this->mainClass->getResults($queryUsers, $numberPerPage, $pageNumber); }
+        $resultCount=0;
+        $loop=0;
+        while($loop<$numberPerPage){
+            if(!is_null($resultData[$loop])){
+                $resultCount = $resultCount+1;
+            }
+            $loop=$loop+1;
+        }
+        if($resultCount==0){
+            header("Status: 404 Not Found");
+            $this->variableArray = array_merge($this->variableArray, array('output' => '404.tpl', 'activePage' => false));
+        }
         $this->variableArray = array_merge($this->variableArray, array(
             'resultPageNumber' => $pageNumber,
             'resultsPerPage' => $numberPerPage,
@@ -588,6 +600,12 @@ class Pages {
             ));
         }
     }
+    public function test(){
+        if(!$this->mainClass->loggedIn || !$this->mainClass->admin){
+            $this->mainClass->redirect("");
+        }
+        // Test function for quick DB administration and other misc stuff. Doesn't actually do anything.
+    }
     public function user(){
         $userToLookup = $this->mainClass->databaseHandle->real_escape_string($this->path[1]);
         $userQuery = $this->mainClass->queryDatabase("SELECT * FROM repo_users WHERE username='$userToLookup'");
@@ -658,7 +676,7 @@ class Pages {
                 $this->mainClass->redirect('view/'.$pubID);
                 break;
             case '4':
-                if(!$this->admin){
+                if(!$this->mainClass->admin){
                     $this->mainClass->redirect('');
                 }
                 $queryDelete = $this->mainClass->queryDatabase("SELECT * FROM repo_entries WHERE pubID='$pubID'");
@@ -671,7 +689,8 @@ class Pages {
                     $this->mainClass->queryDatabase("INSERT INTO repo_code_deleted (id, pubID, code) VALUES ('NULL', '$pubID', '".$rowCode['code']."')");
                     $this->mainClass->queryDatabase("DELETE FROM repo_code WHERE pubID='$pubID'");
                 }
-                $this->mainClass->redirect('');
+                #$this->mainClass->redirect('');
+                exit;
                 break;
             case '5':
                 $queryFlag = $this->mainClass->queryDatabase("SELECT * FROM repo_flags WHERE type=1 AND flaggedID='$pubID' AND author='$user'");
@@ -681,7 +700,7 @@ class Pages {
                 }else{
                     $_SESSION['viewFailure'] = "You have already flagged this script!";
                 }
-                $this->redirect('view/'.$pubID);
+                $this->mainClass->redirect('view/'.$pubID);
                 break;
             case '6':
                 $queryFlag = $this->mainClass->queryDatabase("SELECT * FROM repo_flags WHERE type=2 AND flaggedID='$commentID' AND author='$user'");
@@ -697,8 +716,9 @@ class Pages {
          }
     }
     public function page404(){
+        header("Status: 404 Not Found");
         $this->logHandle->accessLog("Recieved a 404 page");
-        $this->variableArray = array('output' => '404.tpl');
+        $this->variableArray = array('output' => '404.tpl', 'activePage' => false);
     }
 }
 

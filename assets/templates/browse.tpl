@@ -1,4 +1,4 @@
-<div style="background-color:white" class="span8 well well-small">
+<div style="background-color:white" class="offset2 span8 well well-small">
     <h3 style="text-align:center;">Scripts</h3>
     {*{include file="pagination.tpl"}*}
     <table class="table table-hover">

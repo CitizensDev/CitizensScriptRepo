@@ -1,4 +1,4 @@
-YOU BROKE IT! WTF MAN!?!?!?!?<br><br>
+404 error.<br>
 
 If you're seeing this page because of the fact that it doesn't exist yet, try checking back in a few days.<br><br>
 

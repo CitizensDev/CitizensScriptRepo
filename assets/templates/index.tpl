@@ -9,7 +9,6 @@
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
         <script type="text/javascript" src="{buildURL page='assets/js/bootstrap.min.js'}"></script>
         <script type="text/javascript" src="{buildURL page='assets/js/jquery.timeago.js'}"></script>
-        <script type="text/javascript" src="{buildURL page='assets/tiny_mce/tiny_mce.js'}"></script>
         <script>
             jQuery(document).ready(function() {
                 jQuery("abbr.timeago").timeago();
@@ -41,7 +40,7 @@
                   <div class="nav-collapse">
                     <ul class="nav">
                       <li{if $activePage=="home"} class="active"{/if}><a href="{buildURL page=''}"><i class="icon-home"></i> Home</a></li>
-                      <li{if $activePage=="list"} class="active"{/if}><a href="{buildURL page='browse'}"><i class="icon-list"></i> Browse</a></li>
+                      <li{if $activePage=="browse"} class="active"{/if}><a href="{buildURL page='browse'}"><i class="icon-list"></i> Browse</a></li>
                       <li{if $activePage=="post"} class="active"{/if}><a href="{buildURL page='post'}"><i class="icon-pencil"></i> Post</a></li>
                       <!-- Hmmmm, what to put here....<li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Click Me! <b class="caret"></b></a>
@@ -86,9 +85,9 @@
             </div><!-- /navbar -->
         </section>
         <div class="container container-fluid">
-            <div class="alert alert-info">
-                <strong>Notice!</strong> This site is the Citizens Script Repo v3.0 - Omg so many rewrites... 
-            </div>
+            <!--<div class="alert alert-info">
+                <strong>Notice!</strong> This site is the Citizens Script Repo v2.3 - Backend restructuring finished :D
+            </div> -->
             {include file="$output"}
             <footer class="footer span11">
                 <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="{buildURL page='support'}">Support</a> - <a href="{buildURL page='credits'}">Credits</a></div>

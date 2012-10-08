@@ -1,5 +1,4 @@
 <?php
-
 class ScriptRepo{
     public $mainSite = 'http://beta.scripts.citizensnpcs.com/';
     public $rootDir = '/usr/share/nginx/www/scripts2/';
@@ -24,6 +23,7 @@ class ScriptRepo{
             die("We're sorry, but the site is in maintenence right now. Please try again later.");
         }
         $this->handlePage($path);
+        
     }
     public function populateVariables(){
         require('password.php');
@@ -32,6 +32,12 @@ class ScriptRepo{
         require_once('pages.class.php');
         $this->pageHandle = new Pages();
         $this->logHandle = new Logger();
+        function handleError($errno, $errstr, $errfile, $errline){
+            $logHandle = new Logger();
+            $logHandle->errorLog("Type: ".$errno.", Error: ".$errstr.", File:".$errfile.", Line: ".$errline);
+            return true;
+        }
+        set_error_handler('handleError');
     }
     public function initSmarty(){
         $this->smarty = new Smarty;
@@ -111,6 +117,9 @@ class ScriptRepo{
                 break;
             case 'post':
                 $this->pageHandle->post();
+                break;
+            case 'test':
+                $this->pageHandle->test();
                 break;
             case 'verify':
                 $this->pageHandle->verify();
