@@ -1,7 +1,7 @@
 <?php
 class ScriptRepo{
-    public $mainSite = 'http://beta.scripts.citizensnpcs.com/';
-    public $rootDir = '/usr/share/nginx/www/scripts2/';
+    public $mainSite = 'http://scripts.citizensnpcs.com/';
+    public $rootDir = '/usr/share/nginx/www/scripts/';
     public $loggedIn = false;
     public $admin = false;
     public $bCrypt;
@@ -67,10 +67,6 @@ class ScriptRepo{
         }
         if(isset($_POST['q2'])){
             $query = str_replace(array("%20", " "), "+", $_POST['searchBox']);
-            /*if(isset($_POST['1'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
-            if(isset($_POST['2'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
-            if(isset($_POST['3'])){ $query = $query."/1"; }else{ $query = $query."/0"; }
-            if(isset($_POST['4'])){ $query = $query."/1"; }else{ $query = $query."/0"; } */
             $this->redirect('search/'.$query);
         }
     }
@@ -322,7 +318,8 @@ class ScriptRepo{
             $typeOfScript = intval($postData['typeOfScript']);
             if(isset($postData['privacy'])){ $privacy = 2; }else{ $privacy = 1; }
             $scriptCode = $this->databaseHandle->real_escape_string($postData['scriptCode']);
-            $description = $this->databaseHandle->real_escape_string($postData['Description']);
+            $unsafeDescription = str_replace("<script>", htmlspecialchars("<script>"), strtolower($postData['Description']));
+            $description = $this->databaseHandle->real_escape_string($unsafeDescription);
             $name = $this->databaseHandle->real_escape_string($postData['name']);
             $username = $this->username;
             $tagString = implode(', ', $tags);

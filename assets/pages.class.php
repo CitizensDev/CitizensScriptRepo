@@ -203,7 +203,8 @@ class Pages {
                 'name' => $row['name'],
                 'scriptCode' => $rowCode['code'],
                 'description' => $row['description'],
-                'tags' => $row['tags']
+                'tags' => $row['tags'],
+                'activePage' => 'post'
             ));
             $this->logHandle->accessLog("Viewed the duplication page for $idtoedit");
         }
@@ -235,7 +236,8 @@ class Pages {
             'tagError' => false,
             'tags' => false,
             'name' => false,
-            'output' => 'post.tpl'
+            'output' => 'post.tpl',
+            'activePage' => 'edit'
         );
         if(!$_SESSION['loggedIn']){
             $_SESSION['loginInfo'] = 'You must be logged in to edit scripts!';
@@ -264,7 +266,8 @@ class Pages {
                 'name' => $checkRow['name'],
                 'scriptCode' => $rowCode['code'],
                 'description' => $checkRow['description'],
-                'tags' => $checkRow['tags']
+                'tags' => $checkRow['tags'],
+                'activePage' => 'edit'
             ));
         }
     }
@@ -605,6 +608,13 @@ class Pages {
             $this->mainClass->redirect("");
         }
         // Test function for quick DB administration and other misc stuff. Doesn't actually do anything.
+        /*$query = $this->mainClass->queryDatabase("SELECT * FROM repo_entries");
+        while($row = $query->fetch_assoc()){
+            $newDescription = str_replace("<p>", "\n", $row['description']);
+            $newDescription = str_replace("</p>", "\n", $newDescription);
+            $this->mainClass->queryDatabase("UPDATE repo_entries SET description='$newDescription' WHERE id='".$row['id']."'");
+        }
+        exit; */
     }
     public function user(){
         $userToLookup = $this->mainClass->databaseHandle->real_escape_string($this->path[1]);

@@ -9,6 +9,19 @@
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.1/jquery.min.js"></script>
         <script type="text/javascript" src="{buildURL page='assets/js/bootstrap.min.js'}"></script>
         <script type="text/javascript" src="{buildURL page='assets/js/jquery.timeago.js'}"></script>
+        {if $activePage=="post" || $activePage=="edit"}<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/reset-fonts/reset-fonts.css"> 
+<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/base/base-min.css"> 
+<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/assets/skins/sam/skin.css"> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/yahoo-dom-event/yahoo-dom-event.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/element/element-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/datasource/datasource-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/dragdrop/dragdrop-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/datatable/datatable-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/container/container_core-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/menu/menu-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/button/button-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/editor/editor-min.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/yui/2.9.0/build/resize/resize-min.js"></script>{/if}
         <script>
             jQuery(document).ready(function() {
                 jQuery("abbr.timeago").timeago();
@@ -18,15 +31,10 @@
                     $("[rel=tooltip]").tooltip();
                 }
             });
-            tinyMCE.init({
-                theme : "advanced",
-                mode : "exact",
-                elements: "Description"
-            });
             $("#myModal").modal() 
         </script>
     </head>
-    <body class="preview" data-spy="scroll" data-target=".subnav" data-offset="50">
+    <body class="{if $activePage=="post" || $activePage=="edit"}yui-skin-sam {/if}preview" data-spy="scroll" data-target=".subnav" data-offset="50">
         <section id="navbar">
             <div class="navbar">
               <div class="navbar-inner">
@@ -84,12 +92,12 @@
               </div><!-- /navbar-inner -->
             </div><!-- /navbar -->
         </section>
-        <div class="container container-fluid">
+        <div{if $activePage!="view"} class="container container-fluid"{else} width="100%" style="margin-left:2em;margin-right:2em;"{/if}>
             <!--<div class="alert alert-info">
                 <strong>Notice!</strong> This site is the Citizens Script Repo v2.3 - Backend restructuring finished :D
             </div> -->
             {include file="$output"}
-            <footer class="footer span11">
+            <footer class="footer{if $activePage!="view"} span11"{else}" width="100%"{/if}>
                 <div style="padding-bottom:12px; text-align:center;">Copyright &copy; 2012 - CitizensNPCs<br><a href="{buildURL page='support'}">Support</a> - <a href="{buildURL page='credits'}">Credits</a></div>
             </footer>
         </div>

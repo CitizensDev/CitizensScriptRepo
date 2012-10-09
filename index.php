@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', '1'); // Error reporting on. 1153969719074
+ini_set('display_errors', "On");
 session_start(); // Create a session.
 date_default_timezone_set('America/New_York'); // Set the timezone.
 
