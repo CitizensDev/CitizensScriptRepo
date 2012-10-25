@@ -152,6 +152,9 @@ class ScriptRepo{
             case 'action':
                 $this->pageHandle->action();
                 break;
+            case 'dscript':
+                $this->pageHandle->dscript();
+                break;
             default:
                 $this->pageHandle->page404();
                 break;
