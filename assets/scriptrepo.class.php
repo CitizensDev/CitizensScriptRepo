@@ -35,7 +35,7 @@ class ScriptRepo{
         function handleError($errno, $errstr, $errfile, $errline){
             $logHandle = new Logger();
             $logHandle->errorLog("Type: ".$errno.", Error: ".$errstr.", File:".$errfile.", Line: ".$errline);
-            return true;
+            return false;
         }
         set_error_handler('handleError');
     }
@@ -314,23 +314,29 @@ class ScriptRepo{
                 'postError' => 'You must enter at least one tag!',
                 'tagError' => true
             ));
+        }elseif(stripos($postData['Description'], "<script>")){
+            return array_merge($values, array(
+                'postSuccess' => false,
+                'postError' => 'No scripts in the description!',
+                'descriptionError' => true
+            ));
         }else{
             $typeOfScript = intval($postData['typeOfScript']);
             if(isset($postData['privacy'])){ $privacy = 2; }else{ $privacy = 1; }
+            if(isset($postData['dscript'])){ $dscript = 1; }else{ $dscript = 0; }
             $scriptCode = $this->databaseHandle->real_escape_string($postData['scriptCode']);
-            $unsafeDescription = str_replace("<script>", htmlspecialchars("<script>"), strtolower($postData['Description']));
-            $description = $this->databaseHandle->real_escape_string($unsafeDescription);
+            $description = $this->databaseHandle->real_escape_string($postData['Description']);
             $name = $this->databaseHandle->real_escape_string($postData['name']);
             $username = $this->username;
             $tagString = implode(', ', $tags);
             $timestamp = time();
             if(!$oldID){
                 $pubID = $this->generatePublicID();
-                $this->queryDatabase("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', '$timestamp', $timestamp, 0, 0)");
+                $this->queryDatabase("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, dscript, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', '$dscript', '$timestamp', $timestamp, 0, 0)");
                 $this->queryDatabase("INSERT INTO repo_code (id, pubID, code) VALUES ('NULL', '$pubID', '$scriptCode')");
             }else{
                 $pubID = $oldID;
-                $this->queryDatabase("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', privacy='$privacy', scriptType='$typeOfScript', edited='$timestamp' WHERE pubID='$pubID'");
+                $this->queryDatabase("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', privacy='$privacy', scriptType='$typeOfScript', dscript='$dscript', edited='$timestamp' WHERE pubID='$pubID'");
                 $this->queryDatabase("UPDATE repo_code SET code='$scriptCode' WHERE pubID='$pubID'");
             }
             return array( 'postSuccess' => true, 'newID' => $pubID );

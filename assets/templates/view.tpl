@@ -6,7 +6,6 @@
 {if $viewFailure}<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">X</button>{$viewFailure}</div>{/if}
 {if $viewSuccess}<div class="alert alert-success"><button type="button" class="close" data-dismiss="alert">X</button>{$viewSuccess}</div>{/if}
 <div width="100%">
-    <div width="100%">
     <div class="span3 well well-large pull-right" style="margin:1em;display:block;">
         <h4 style="text-align:center;">{$dataToUse.name}</h2><br>
         <b>Author: </b><a href="{buildURL page='user/'}{$dataToUse.author}">{$dataToUse.author}</a><br>
@@ -14,7 +13,8 @@
         <b>Edited: </b><abbr class="timeago" title="{$dateEdited}">{$dateEdited}</abbr><br>
         <b>Views: </b>{$dataToUse.views}<br>
         <b>Downloads: </b>{$dataToUse.downloads}<br>
-        <b>Likes: </b>{$likes}<br><br>
+        <b>Likes: </b>{$likes}<br>
+        {if $dataToUse.dscript}<div style="margin:0 auto;text-align:center;"><button rel="tooltip" title='DScript' class="btn btn-success" onclick='document.location.href="{buildURL page='dscript/'}{$dataToUse.pubID}"'>DScript</button></div>{/if}<br>
         <div style="margin:0 auto;text-align:center;"><button onclick='document.location.href="{buildURL page='raw/'}{$dataToUse.pubID}"' class="btn btn-info">View Raw</button> <button onclick='document.location.href="{buildURL page='download/'}{$dataToUse.pubID}"' class="btn btn-primary">Download</button><br><small><a href="{buildURL page='download/'}{$dataToUse.pubID}">WGET</a></small><br>
             <span style="margin:5px;margin-left:auto;margin-right:auto;">
                 <button onclick='document.location.href="{buildURL page='action/1/'}{$dataToUse.pubID}"' rel="tooltip" title="Like" class="btn btn-success{if $liked} disabled{/if}"><i class="icon-thumbs-up"></i></button> 
@@ -24,16 +24,16 @@
                 <button onclick='document.location.href="{buildURL page='action/5/'}{$dataToUse.pubID}"' rel="tooltip" title="Report" class="btn btn-warning"><i class="icon-flag"></i></button> 
             </span>
         </div>
-    </div>
-    <div>
+            
+    </div><div>
         <b>Description: </b>{$dataToUse.description|nl2br}<br><br>
     </div>
-    </div>
-    <div class="well" style="background-color:white;"><pre class="brush: {if $dataToUse.scriptType==1}js{else}yaml{/if}">{$code}</pre></div>
+    
     <script type="text/javascript">
         SyntaxHighlighter.all()
     </script>
-</div><br><br><br><br>
+</div><div class="well" style="background-color:white;"><pre class="brush: {if $dataToUse.scriptType==1}js{else}yaml{/if}">{$code}</pre></div>
+<br><br><br><br>
 <div id="commentsZone">
     <legend>Comments</legend>
     <table class="table table-bordered">

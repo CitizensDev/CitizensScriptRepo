@@ -15,7 +15,9 @@
             <small class="muted">Separate tags with a comma.</small><br><br>
             <small class="muted">Pick one!</small><br><br>
             <label for='privacy'>Privacy:</label>
-            <input type="checkbox" name="privacy" id="privacy" value="2" /> Make my script unlisted (won't appear in search results).
+            <input type="checkbox" name="privacy" id="privacy" value="2" /> Make my script unlisted (won't appear in search results).<br>
+            <label for='dscript'>DScript:</label>
+            <input type="checkbox" name="dscript" id="dscript" value="1" /> Script is safe for use without any editing (not dependent on locations or NPC names).
             <br><br><br>
             <button class="btn" type="button">Cancel</button> <input class="btn btn-primary" type='Submit' name='SubmitScript' value=' Save ' />
         </div>

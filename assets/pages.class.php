@@ -255,7 +255,7 @@ class Pages {
                 $this->logHandle->accessLog("Edited ".$editSuccess['newID']);
                 $this->mainClass->redirect('view/'.$editSuccess['newID']);
             }else{
-                $this->logHandle->accessLog("Attempted to edit ".$editSuccess['newID'].", but recieved the error \"".$editSuccess['postError']."\"");
+                $this->logHandle->accessLog("Attempted to edit ".$pubID.", but recieved the error \"".$editSuccess['postError']."\"");
                 $this->variableArray = array_merge($this->variableArray, $editSuccess);
             }
         }else{
@@ -591,7 +591,9 @@ class Pages {
             $data = $query->fetch_assoc();
             $code = $queryCode->fetch_assoc();
             $newviews = $data['views']+1;
-            $this->mainClass->queryDatabase("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
+            if($this->mainClass->loggedIn && $this->mainClass->username!="AgentKid"){
+                $this->mainClass->queryDatabase("UPDATE repo_entries SET views='$newviews' WHERE pubID='$pubID'");
+            }
             $this->variableArray = array_merge($this->variableArray, array(
                 'likes' => $queryLikes->num_rows,
                 'liked' => $liked,
@@ -646,7 +648,8 @@ class Pages {
                 'scriptsPosted' => count($scriptArray),
                 'commentsAdded' => $commentQuery->num_rows,
                 'scriptsLiked' => $likeQuery->num_rows,
-                'user' => $userRow
+                'user' => $userRow,
+                'activePage' => 'user'
             );
         }
     }
