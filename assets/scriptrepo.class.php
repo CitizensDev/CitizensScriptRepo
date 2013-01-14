@@ -155,6 +155,9 @@ class ScriptRepo{
             case 'dscript':
                 $this->pageHandle->dscript();
                 break;
+            case 'recover':
+                $this->pageHandle->recover();
+                break;
             default:
                 $this->pageHandle->page404();
                 break;

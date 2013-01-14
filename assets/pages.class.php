@@ -177,7 +177,7 @@ class Pages {
             'emailError' => false,
             'passwordError' => false,
             'ayahError' => false,
-            'ayah' => $this->ayah->getPublisherHTML(),
+            'ayah' => $this->mainClass->ayah->getPublisherHTML(),
             'output' => 'register.tpl'
         );
         if (isset($_POST['registerForm'])) {
@@ -674,7 +674,7 @@ class Pages {
                 'dataToUse' => $data,
                 'dateCreated' => date('Y-m-d\TH:i:sO', $data['timestamp']),
                 'dateEdited' => date('Y-m-d\TH:i:sO', $data['edited']),
-                'code' => str_replace('<', '&lt;', $code['code']),
+                'code' => $code['code'],
                 'commentData' => $commentData
                     ));
         }
@@ -812,6 +812,11 @@ class Pages {
         header("Status: 404 Not Found");
         $this->logHandle->accessLog("Recieved a 404 page");
         $this->variableArray = array('output' => '404.tpl', 'activePage' => false);
+    }
+    
+    public function recover(){
+        $this->logHandle->accessLog("Attempted recovery...");
+        $this->variableArray = array('output' => 'recover.tpl', 'activePage' => false);
     }
 
 }

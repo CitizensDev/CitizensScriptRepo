@@ -28,11 +28,7 @@
     </div><div>
         <b>Description: </b>{$dataToUse.description|nl2br}<br><br>
     </div>
-    
-    <script type="text/javascript">
-        SyntaxHighlighter.all()
-    </script>
-</div><div class="well" style="background-color:white;"><pre class="brush: {if $dataToUse.scriptType==1}js{else}yaml{/if}">{$code}</pre></div>
+</div><div class="well" style="background-color:white;">{if $dataToUse.scriptType==1}{$type="javascript"}{else}{$type="yaml"}{/if}{parseGeshi code=$code lang=$type}</div>
 <br><br><br><br>
 <div id="commentsZone">
     <legend>Comments</legend>

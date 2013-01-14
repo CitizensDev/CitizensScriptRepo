@@ -10,3 +10,6 @@ password.php
 !/assets/geshi/yaml.php
 /assets/tiny_mce/
 /assets/syntaxhighlighter/
+/assets/geshi.php
+.DS_Store
+*/.DS_Store
