@@ -59,7 +59,7 @@ class Pages {
             $rowCode = $queryCode->fetch_assoc();
             $newCount = $row['downloads'] + 1;
             $this->mainClass->queryDatabase("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
-            echo "<html><body><pre>" . htmlspecialchars($rowCode['code']) . "</pre></body></html";
+            echo "<!DOCTYPE html><html><body><pre>" . htmlspecialchars($rowCode['code']) . "</pre></body></html>";
             exit;
         }
     }
