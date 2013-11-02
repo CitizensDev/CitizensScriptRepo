@@ -1,6 +1,6 @@
 <?php
 class ScriptRepo{
-    public $mainSite = 'http://scripts.citizensnpcs.com/';
+    public $mainSite = 'http://scripts.citizensnpcs.co/';
     public $rootDir = '/usr/share/nginx/www/scripts/';
     public $loggedIn = false;
     public $admin = false;
@@ -186,7 +186,7 @@ class ScriptRepo{
                 return array(
                     'loginSuccess' => false,
                     'username' => $username,
-                    'loginError' => 'You must activate your email before you can log in! <a href="http://scripts.citizensnpcs.com/resendConfirmation">Resend confirmation email.</a>',
+                    'loginError' => 'You must activate your email before you can log in! <a href="http://scripts.citizensnpcs.co/resendConfirmation">Resend confirmation email.</a>',
                 );
             }else{
                 // Login
