@@ -12,6 +12,8 @@
             <textarea id='scriptCode' name='scriptCode' rows="10" class="span7">{$scriptCode}</textarea>{if $scriptError}</div>{/if}
             {if $tagError}<div class="control-group error">{/if}<label for='tags' >Tags:</label>
             <input class="input-large" name='tags' id='tags' type="text"{if $tags} value="{$tags}"{/if} /><br>{if $tagError}</div>{/if}
+            {if $dVersionError}<div class="control-group error">{/if}<label for='dVersion' >Denizen Version:</label>
+            <input class="input-small" name='dVersion' id='dVersion' type="text"{if $denizen_version} value="{$denizen_version}"{/if} /><br>{if $dVersionError}</div>{/if}
             <small class="muted">Separate tags with a comma.</small><br><br>
             {if $typeError}<div class="control-group error">{/if}<label>Type of code:</label>
             <input type="hidden" name="typeOfScript" value="None" />

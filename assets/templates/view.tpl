@@ -7,10 +7,11 @@
 {if $viewSuccess}<div class="alert alert-success"><button type="button" class="close" data-dismiss="alert">X</button>{$viewSuccess}</div>{/if}
 <div width="100%">
     <div class="span3 well well-large pull-right" style="margin:1em;display:block;">
-        <h4 style="text-align:center;">{$dataToUse.name}</h4><br>
+        <h4 style="text-align:center;">{$dataToUse.name}</h2><br>
         <b>Author: </b><a href="{buildURL page='user/'}{$dataToUse.author}">{$dataToUse.author}</a><br>
         <b>Created: </b><abbr class="timeago" title="{$dateCreated}">{$dateCreated}</abbr><br>
         <b>Edited: </b><abbr class="timeago" title="{$dateEdited}">{$dateEdited}</abbr><br>
+        <b>Denizen Version: </b>{if $dataToUse.denizen_version}{$dataToUse.denizen_version}{else}0.76{/if}<br>
         <b>Views: </b>{$dataToUse.views}<br>
         <b>Downloads: </b>{$dataToUse.downloads}<br>
         <b>Likes: </b>{$likes}<br>
@@ -50,7 +51,7 @@
 </div>
 <form id='post' method='post' accept-charset='UTF-8'>
     <fieldset>
-        <textarea rows="4"{if !$ScriptRepo->loggedIn} disabled{/if} class="span7" id="commentField" name="commentField" placeholder="{if $ScriptRepo->loggedIn}Comment{else}Log in to comment!{/if}">{if $commentField}{$commentField}{/if}</textarea><br>
+        <textarea rows="4"{if !$ScriptRepo->loggedIn}disabled{/if} class="span7" id="commentField" name="commentField" placeholder="{if $ScriptRepo->loggedIn}Comment{else}Log in to comment!{/if}">{if $commentField}{$commentField}{/if}</textarea><br>
         <input class="btn btn-small btn-primary" type='Submit' name='Submit' value='Submit' /><br>
     </fieldset>
 </form>

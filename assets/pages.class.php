@@ -59,7 +59,7 @@ class Pages {
             $rowCode = $queryCode->fetch_assoc();
             $newCount = $row['downloads'] + 1;
             $this->mainClass->queryDatabase("UPDATE repo_entries SET downloads='$newCount' WHERE pubID='$pubID'");
-            echo "<!DOCTYPE html><html><body><pre>" . htmlspecialchars($rowCode['code']) . "</pre></body></html>";
+            echo "<html><body><pre>" . htmlspecialchars($rowCode['code']) . "</pre></body></html";
             exit;
         }
     }
@@ -206,6 +206,7 @@ class Pages {
             'descriptionError' => false,
             'typeError' => false,
             'tagError' => false,
+            'dVersionError' => false,
             'tags' => false,
             'name' => false,
             'nameError' => false,
@@ -274,6 +275,7 @@ class Pages {
             'descriptionError' => false,
             'typeError' => false,
             'tagError' => false,
+            'dVersionError' => false,
             'tags' => false,
             'name' => false,
             'output' => 'post.tpl',
@@ -311,6 +313,7 @@ class Pages {
                 'scriptCode' => $rowCode['code'],
                 'description' => $checkRow['description'],
                 'tags' => $checkRow['tags'],
+                'denizen_version' => $checkRow['denizen_version'],
                 'activePage' => 'edit'
                     ));
         }

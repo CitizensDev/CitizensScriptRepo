@@ -1,6 +1,6 @@
 <?php
 class ScriptRepo{
-    public $mainSite = 'http://scripts.citizensnpcs.co/';
+    public $mainSite = '/';
     public $rootDir = '/usr/share/nginx/www/scripts/';
     public $loggedIn = false;
     public $admin = false;
@@ -284,6 +284,7 @@ class ScriptRepo{
         if(isset($postData['scriptCode']) && $postData['scriptCode']!=""){ $values = array_merge($values, array('scriptCode' => $postData['scriptCode'])); }
         if(isset($postData['Description']) && $postData['Description']!=""){ $values = array_merge($values, array('description' => $postData['Description'])); }
         if(isset($postData['tags']) && $postData['tags']!=""){ $values = array_merge($values, array('tags' => $postData['tags'])); }
+        if(isset($postData['dVersion']) && $postData['dVersion']!=""){ $values = array_merge($values, array('denizen_version' => $postData['dVersion'])); }
         if($postData['name']==""){
             return array_merge($values, array(
                 'postSuccess' => false,
@@ -320,6 +321,12 @@ class ScriptRepo{
                 'postError' => 'You must enter at least one tag!',
                 'tagError' => true
             ));
+        }elseif(!isset($postData['dVersion']) || $postData['dVersion']==""){
+            return array_merge($values, array(
+                'postSuccess' => false,
+                'postError' => 'You must set a denizen version!',
+                'dVersionError' => true
+            ));
         }elseif(stripos($postData['Description'], "<script>")){
             return array_merge($values, array(
                 'postSuccess' => false,
@@ -334,15 +341,16 @@ class ScriptRepo{
             $description = $this->databaseHandle->real_escape_string($postData['Description']);
             $name = $this->databaseHandle->real_escape_string($postData['name']);
             $username = $this->username;
+            $dVersion = $this->databaseHandle->real_escape_string($postData['dVersion']);
             $tagString = implode(', ', $tags);
             $timestamp = time();
             if(!$oldID){
                 $pubID = $this->generatePublicID();
-                $this->queryDatabase("INSERT INTO repo_entries (id, pubID, author, name, description, tags, privacy, scriptType, dscript, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$privacy', '$typeOfScript', '$dscript', '$timestamp', $timestamp, 0, 0)");
+                $this->queryDatabase("INSERT INTO repo_entries (id, pubID, author, name, description, tags, denizen_version, privacy, scriptType, dscript, timestamp, edited, downloads, views) VALUES ('NULL', '$pubID', '$username', '$name', '$description', '$tagString', '$dVersion', '$privacy', '$typeOfScript', '$dscript', '$timestamp', $timestamp, 0, 0)");
                 $this->queryDatabase("INSERT INTO repo_code (id, pubID, code) VALUES ('NULL', '$pubID', '$scriptCode')");
             }else{
                 $pubID = $oldID;
-                $this->queryDatabase("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', privacy='$privacy', scriptType='$typeOfScript', dscript='$dscript', edited='$timestamp' WHERE pubID='$pubID'");
+                $this->queryDatabase("UPDATE repo_entries SET name='$name', description='$description', tags='$tagString', denizen_version='$dVersion', privacy='$privacy', scriptType='$typeOfScript', dscript='$dscript', edited='$timestamp' WHERE pubID='$pubID'");
                 $this->queryDatabase("UPDATE repo_code SET code='$scriptCode' WHERE pubID='$pubID'");
             }
             return array( 'postSuccess' => true, 'newID' => $pubID );
